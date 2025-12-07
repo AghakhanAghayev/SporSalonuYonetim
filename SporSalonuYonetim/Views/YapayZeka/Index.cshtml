@@ -1,68 +1,91 @@
 ﻿@{
-    ViewData["Title"] = "Yapay Zeka Antrenör";
+    ViewData["Title"] = "AI Antrenör & Görselleştirme";
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4><i class="fa fa-robot"></i> AI Antrenörüne Danış</h4>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-dark text-white p-4">
+                    <h2 class="card-title mb-0">🤖 AI Spor Koçu & Görselleştirme</h2>
                 </div>
-                <div class="card-body">
-                    <form asp-action="OneriAl" method="post">
-                        <div class="mb-3">
-                            <label>Yaşınız:</label>
-                            <input type="number" name="yas" class="form-control" required placeholder="Örn: 22" />
+                <div class="card-body p-4">
+
+                    <form asp-action="Danis" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Yaş</label>
+                                <input type="number" class="form-control" name="yas" required value="@ViewBag.EskiYas" placeholder="22" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Boy (cm)</label>
+                                <input type="number" class="form-control" name="boy" required value="@ViewBag.EskiBoy" placeholder="180" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Kilo (kg)</label>
+                                <input type="number" class="form-control" name="kilo" required value="@ViewBag.EskiKilo" placeholder="75" />
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label>Kilonuz (kg):</label>
-                            <input type="number" name="kilo" class="form-control" required placeholder="Örn: 75" />
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Cinsiyet</label>
+                                <select class="form-select" name="cinsiyet">
+                                    <option value="Erkek">Erkek</option>
+                                    <option value="Kadın">Kadın</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hedef</label>
+                                <select class="form-select" name="hedef">
+                                    <option value="Kilo Vermek">Kilo Vermek (Yağ Yakımı)</option>
+                                    <option value="Kas Yapmak">Kas Yapmak (Hacim)</option>
+                                    <option value="Fit Olmak">Fit Görünmek</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label>Boyunuz (cm):</label>
-                            <input type="number" name="boy" class="form-control" required placeholder="Örn: 180" />
+
+                        <div class="mt-4 p-3 bg-warning bg-opacity-10 border border-warning rounded">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="gorselIste" name="gorselIste" value="true" checked>
+                                <label class="form-check-label fw-bold" for="gorselIste">
+                                    📸 Hedef vücudumun yapay zeka fotoğrafını oluştur!
+                                </label>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label>Cinsiyet:</label>
-                            <select name="cinsiyet" class="form-control">
-                                <option value="Erkek">Erkek</option>
-                                <option value="Kadın">Kadın</option>
-                            </select>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">🚀 Programı ve Resmi Oluştur</button>
                         </div>
-                        <div class="mb-3">
-                            <label>Hedefiniz:</label>
-                            <select name="hedef" class="form-control">
-                                <option value="Kilo Vermek">Kilo Vermek (Yağ Yakımı)</option>
-                                <option value="Kas Yapmak">Kas Yapmak (Hacim)</option>
-                                <option value="Formu Korumak">Formu Korumak</option>
-                                <option value="Kondisyon Artırmak">Kondisyon Artırmak</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100">
-                            Yapay Zekaya Sor
-                        </button>
                     </form>
+
+                    @if (ViewBag.Cevap != null)
+                    {
+                        <hr class="my-5" />
+
+                        @if (!string.IsNullOrEmpty(ViewBag.ResimPrompt))
+                        {
+                            <div class="card mb-4 border-0 shadow">
+                                <div class="card-body text-center bg-dark text-white rounded">
+                                    <h3 class="mb-3 text-warning">✨ İşte 6 Ay Sonraki Sen!</h3>
+
+                                    <img src="https://image.pollinations.ai/prompt/@ViewBag.ResimPrompt?width=800&height=600&model=flux&nologo=true"
+                                         class="img-fluid rounded shadow-lg"
+                                         alt="Yapay Zeka Tarafından Oluşturulan Hedef Vücut"
+                                         style="min-height: 300px; background-color: #333;" />
+
+                                    <p class="mt-2 text-muted small">Gerçek zamanlı AI tarafından oluşturulmuştur.</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="p-4 bg-light rounded border">
+                            <h4 class="text-primary fw-bold">🏋️ Antrenman Programın</h4>
+                            <div style="white-space: pre-wrap; font-family: sans-serif;">@ViewBag.Cevap</div>
+                        </div>
+                    }
                 </div>
             </div>
-        </div>
-
-        <div class="col-md-7">
-            @if (ViewBag.Cevap != null)
-            {
-                <div class="alert alert-info shadow">
-                    <h5><i class="fa fa-comment-dots"></i> AI Önerisi:</h5>
-                    <hr />
-                    <p style="white-space: pre-line;">@ViewBag.Cevap</p>
-                </div>
-            }
-            else
-            {
-                <div class="alert alert-secondary">
-                    <p>Yandaki formu doldurarak vücut tipine ve hedefine uygun özel bir program alabilirsin.</p>
-                    <p><em>Örnek: "20 yaşında, 70 kilo, kas yapmak isteyen biri..."</em></p>
-                </div>
-            }
         </div>
     </div>
 </div>

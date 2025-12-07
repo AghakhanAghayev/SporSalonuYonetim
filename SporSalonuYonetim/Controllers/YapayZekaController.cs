@@ -1,90 +1,95 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
-using System.Text.Json; // JSON işlemleri için gerekli
+using System.Text.Json;
 
 namespace SporSalonuYonetim.Controllers
 {
     public class YapayZekaController : Controller
     {
-        // GET: YapayZeka Sayfasını Aç
+        private readonly string _apiKey;
+        private readonly HttpClient _httpClient;
+
+        public YapayZekaController(IConfiguration configuration)
+        {
+            _apiKey = configuration["GeminiApiKey"];
+            _httpClient = new HttpClient();
+        }
+
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
-        // POST: Formdan gelen verileri işle
         [HttpPost]
-        public async Task<IActionResult> OneriAl(int yas, int kilo, int boy, string hedef, string cinsiyet)
+        public async Task<IActionResult> Danis(int yas, int boy, int kilo, string cinsiyet, string hedef, bool gorselIste)
         {
-            // 1. Kullanıcıdan gelen verileri birleştirelim
-            string prompt = $"Ben {yas} yaşında, {kilo} kg ağırlığında, {boy} cm boyunda bir {cinsiyet} bireyim. " +
-                            $"Hedefim: {hedef}. " +
-                            $"Bana maddeler halinde kısa ve öz bir egzersiz ve beslenme programı önerir misin?";
-
-            string yapayZekaCevabi = "";
-
-            // --- API ANAHTARI KISMI ---
-            string apiKey = "BURAYA_OPENAI_API_KEY_GELECEK";
-            // Eğer anahtarın yoksa veya boş bırakırsan aşağıdaki "else" kısmı çalışır ve sahte cevap döner.
-
-            if (apiKey != "BURAYA_OPENAI_API_KEY_GELECEK" && !string.IsNullOrEmpty(apiKey))
+            try
             {
-                // GERÇEK API BAĞLANTISI (OpenAI)
-                try
+                // 1. Prompt Hazırlığı
+                StringBuilder promptBuilder = new StringBuilder();
+                promptBuilder.AppendLine($"Ben {yas} yaşında, {boy} cm boyunda ve {kilo} kg ağırlığında bir {cinsiyet} bireyim.");
+                promptBuilder.AppendLine($"Hedefim: {hedef}.");
+                promptBuilder.AppendLine("Bana haftalık detaylı antrenman ve beslenme programı hazırla. Türkçe olsun.");
+
+                if (gorselIste)
                 {
-                    using (var client = new HttpClient())
+                    // BURASI ÇOK ÖNEMLİ: Gemini'ye "Bize resim için kod ver" diyoruz.
+                    promptBuilder.AppendLine("\n--- ÖZEL İSTEK ---");
+                    promptBuilder.AppendLine("Cevabının EN SONUNA, '###RESIM_KODU:' diye bir başlık aç.");
+                    promptBuilder.AppendLine("Bu başlığın yanına, bu kişinin hedefine ulaştığındaki halini tarif eden KISA ve İNGİLİZCE bir cümle yaz.");
+                    promptBuilder.AppendLine("Örnek format: ###RESIM_KODU: muscular man in gym, fitness model body, cinematic lighting, 8k");
+                }
+
+                var modelId = "gemini-2.5-flash";
+                var url = $"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:generateContent?key={_apiKey}";
+
+                var requestBody = new
+                {
+                    contents = new[] { new { parts = new[] { new { text = promptBuilder.ToString() } } } }
+                };
+
+                var jsonContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(url, jsonContent);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    using (JsonDocument doc = JsonDocument.Parse(responseString))
                     {
-                        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+                        string fullText = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
 
-                        var requestData = new
+                        // 2. Cevabı Parçalama (Metin ve Resim Kodu)
+                        if (fullText.Contains("###RESIM_KODU:"))
                         {
-                            model = "gpt-3.5-turbo",
-                            messages = new[]
+                            var parts = fullText.Split(new string[] { "###RESIM_KODU:" }, StringSplitOptions.RemoveEmptyEntries);
+                            ViewBag.Cevap = parts[0].Trim(); // Antrenman Programı
+
+                            // Resim Promptunu alıyoruz (İngilizce cümle)
+                            if (parts.Length > 1)
                             {
-                                new { role = "system", content = "Sen profesyonel bir spor hocası ve diyetisyensin." },
-                                new { role = "user", content = prompt }
-                            },
-                            max_tokens = 500
-                        };
-
-                        var jsonContent = JsonSerializer.Serialize(requestData);
-                        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                        var response = await client.PostAsync("https://api.openai.com/v1/chat/completions", content);
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var responseString = await response.Content.ReadAsStringAsync();
-                            var jsonDoc = JsonDocument.Parse(responseString);
-                            yapayZekaCevabi = jsonDoc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+                                ViewBag.ResimPrompt = parts[1].Trim();
+                            }
                         }
                         else
                         {
-                            yapayZekaCevabi = "Hata: API bağlantısı kurulamadı. Lütfen daha sonra tekrar deneyin.";
+                            ViewBag.Cevap = fullText;
                         }
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    yapayZekaCevabi = "Hata oluştu: " + ex.Message;
+                    ViewBag.Cevap = "Bağlantı hatası oluştu.";
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // SİMÜLASYON MODU (API Key yoksa çalışır - Sunumda kurtarıcıdır)
-                yapayZekaCevabi = $"(Simülasyon Modu) Merhaba! {yas} yaşında ve {hedef} hedefi olan biri için önerilerim:\n\n" +
-                                  "**Egzersiz Programı:**\n" +
-                                  "- Haftada 3 gün tüm vücut ağırlık çalışması.\n" +
-                                  "- Haftada 2 gün 30dk tempolu yürüyüş.\n\n" +
-                                  "**Beslenme Önerisi:**\n" +
-                                  "- Günde en az 2.5 litre su iç.\n" +
-                                  "- Şeker ve paketli gıdalardan uzak dur.\n" +
-                                  "- Protein ağırlıklı beslenmeye özen göster.";
+                ViewBag.Cevap = $"Hata: {ex.Message}";
             }
 
-            // Cevabı View'a gönder
-            ViewBag.Cevap = yapayZekaCevabi;
-            ViewBag.Prompt = prompt; // Kullanıcının ne sorduğunu da geri gönderelim
+            // Form verilerini koru
+            ViewBag.EskiYas = yas; ViewBag.EskiBoy = boy; ViewBag.EskiKilo = kilo; ViewBag.GorselIstendi = gorselIste;
+
             return View("Index");
         }
     }
