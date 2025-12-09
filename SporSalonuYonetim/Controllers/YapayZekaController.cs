@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 
 namespace SporSalonuYonetim.Controllers
 {
+    [Authorize] // Sadece "Giriş yapmış" herhangi biri girebilir
     public class YapayZekaController : Controller
     {
         private readonly string _apiKey;

@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SporSalonuYonetim.Data;
 using SporSalonuYonetim.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SporSalonuYonetim.Controllers
 {
+    // KURAL 1: Sayfaları görmek için giriş yapmış olmak şart
+    [Authorize]
     public class HizmetsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,42 +22,41 @@ namespace SporSalonuYonetim.Controllers
             _context = context;
         }
 
-        // GET: Hizmets
+        // GET: Hizmets (Herkes görebilir)
         public async Task<IActionResult> Index()
         {
             return View(await _context.Hizmetler.ToListAsync());
         }
 
-        // GET: Hizmets/Details/5
+        // GET: Hizmets/Details/5 (Herkes görebilir)
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var hizmet = await _context.Hizmetler
                 .FirstOrDefaultAsync(m => m.HizmetId == id);
-            if (hizmet == null)
-            {
-                return NotFound();
-            }
+
+            if (hizmet == null) return NotFound();
 
             return View(hizmet);
         }
 
+        // -----------------------------------------------------------
+        // YÖNETİM İŞLEMLERİ (SADECE ADMIN)
+        // -----------------------------------------------------------
+
         // GET: Hizmets/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: Hizmets/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HizmetId,Ad,Aciklama,Ucret,Sure")] Hizmet hizmet)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
         {
             if (ModelState.IsValid)
             {
@@ -66,32 +68,23 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // GET: Hizmets/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var hizmet = await _context.Hizmetler.FindAsync(id);
-            if (hizmet == null)
-            {
-                return NotFound();
-            }
+            if (hizmet == null) return NotFound();
             return View(hizmet);
         }
 
         // POST: Hizmets/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("HizmetId,Ad,Aciklama,Ucret,Sure")] Hizmet hizmet)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id, [Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
         {
-            if (id != hizmet.HizmetId)
-            {
-                return NotFound();
-            }
+            if (id != hizmet.HizmetId) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -102,14 +95,8 @@ namespace SporSalonuYonetim.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!HizmetExists(hizmet.HizmetId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!HizmetExists(hizmet.HizmetId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -117,19 +104,15 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // GET: Hizmets/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var hizmet = await _context.Hizmetler
                 .FirstOrDefaultAsync(m => m.HizmetId == id);
-            if (hizmet == null)
-            {
-                return NotFound();
-            }
+
+            if (hizmet == null) return NotFound();
 
             return View(hizmet);
         }
@@ -137,6 +120,7 @@ namespace SporSalonuYonetim.Controllers
         // POST: Hizmets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var hizmet = await _context.Hizmetler.FindAsync(id);
