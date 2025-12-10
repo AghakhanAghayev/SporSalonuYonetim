@@ -1,83 +1,99 @@
-﻿@page
-@model LoginModel
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 
-@{
-    ViewData["Title"] = "Log in";
-}
+namespace SporSalonuYonetim.Areas.Identity.Pages.Account
+{
+    public class LoginModel : PageModel
+    {
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly ILogger<LoginModel> _logger;
+        // Kullanıcıyı bulmak için gerekli yönetici
+        private readonly UserManager<IdentityUser> _userManager;
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
-                </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
+        public LoginModel(SignInManager<IdentityUser> signInManager, 
+            ILogger<LoginModel> logger,
+            UserManager<IdentityUser> userManager)
+        {
+            _signInManager = signInManager;
+            _logger = logger;
+            _userManager = userManager;
+        }
+
+        [BindProperty]
+        public InputModel Input { get; set; }
+
+        public IList<AuthenticationScheme> ExternalLogins { get; set; }
+
+        public string ReturnUrl { get; set; }
+
+        [TempData]
+        public string ErrorMessage { get; set; }
+
+        public class InputModel
+        {
+            [Required]
+            [EmailAddress]
+            public string Email { get; set; }
+
+            [Required]
+            [DataType(DataType.Password)]
+            public string Password { get; set; }
+
+            [Display(Name = "Beni Hatırla?")]
+            public bool RememberMe { get; set; }
+        }
+
+        public async Task OnGetAsync(string returnUrl = null)
+        {
+            if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                ModelState.AddModelError(string.Empty, ErrorMessage);
             }
-        </section>
-    </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+            returnUrl ??= Url.Content("~/");
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            ReturnUrl = returnUrl;
+        }
+
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            if (ModelState.IsValid)
+            {
+                // 1. Mail adresine sahip kullanıcıyı bul
+                var user = await _userManager.FindByEmailAsync(Input.Email);
+
+                if (user != null)
+                {
+                    // 2. Kullanıcının 'UserName'i (Ad Soyad) ile giriş yap
+                    var result = await _signInManager.PasswordSignInAsync(user.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                    
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("Kullanıcı giriş yaptı.");
+                        return LocalRedirect(returnUrl);
+                    }
+                }
+                
+                // Hata durumu
+                ModelState.AddModelError(string.Empty, "Giriş başarısız. Email veya şifre hatalı.");
+                return Page();
+            }
+
+            return Page();
+        }
+    }
 }

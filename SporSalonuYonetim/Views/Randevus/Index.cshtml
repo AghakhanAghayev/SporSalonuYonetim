@@ -1,59 +1,79 @@
 ﻿@model IEnumerable<SporSalonuYonetim.Models.Randevu>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Randevu Takvimi";
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Randevu Takvimi</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-calendar-plus"></i> Yeni Randevu Al
+        </a>
+    </div>
+    <hr />
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.TarihSaat)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Durum)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Uye)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Antrenor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Hizmet)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.TarihSaat)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Durum)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Uye.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Antrenor.AdSoyad)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Hizmet.Ad)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RandevuId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RandevuId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RandevuId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <table class="table table-hover shadow-sm mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>Tarih & Saat</th>
+                <th>Durum</th>
+                <th>Üye</th>
+                <th>Antrenör</th>
+                <th>Hizmet</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="fw-bold">
+                        @item.TarihSaat.ToString("dd.MM.yyyy HH:mm")
+                    </td>
+
+                    <td>
+                        @if (item.Durum == "Onaylandı")
+                        {
+                            <span class="badge bg-success">Onaylandı</span>
+                        }
+                        else if (item.Durum == "Reddedildi" || item.Durum == "İptal")
+                        {
+                            <span class="badge bg-danger">@item.Durum</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Bekliyor</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (item.Uye != null)
+                        {
+                            <span class="fw-bold text-primary">@item.Uye.UserName</span>
+                        }
+                        else
+                        {
+                            <span>Misafir</span>
+                        }
+                    </td>
+
+                    <td>@Html.DisplayFor(modelItem => item.Antrenor.AdSoyad)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Hizmet.Ad)</td>
+
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.RandevuId" class="btn btn-sm btn-info text-white">Detay</a>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <span>|</span>
+                            <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-warning">Durumu Güncelle</a>
+                            <span>|</span>
+                            <a asp-action="Delete" asp-route-id="@item.RandevuId" class="btn btn-sm btn-danger">Sil</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

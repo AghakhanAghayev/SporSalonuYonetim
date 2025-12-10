@@ -1,54 +1,73 @@
 ﻿@model SporSalonuYonetim.Models.Randevu
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Randevu Düzenle";
 }
 
-<h1>Edit</h1>
+<div class="container mt-4">
+    <h1>Randevu Durumunu Güncelle</h1>
+    <hr />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">Yönetici İşlemleri</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="RandevuId" />
 
-<h4>Randevu</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="RandevuId" />
-            <div class="form-group">
-                <label asp-for="TarihSaat" class="control-label"></label>
-                <input asp-for="TarihSaat" class="form-control" />
-                <span asp-validation-for="TarihSaat" class="text-danger"></span>
+                        <input type="hidden" asp-for="UyeId" />
+
+                        <div class="form-group mb-3">
+                            <label class="fw-bold">Üye Adı</label>
+                            <input type="text" class="form-control" value="@(Model.Uye != null ? Model.Uye.UserName : "Bilinmiyor")" disabled />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Durum" class="control-label fw-bold">Randevu Durumu</label>
+                            <select asp-for="Durum" class="form-select">
+                                <option value="Bekliyor">Bekliyor (Sarı)</option>
+                                <option value="Onaylandı">Onaylandı (Yeşil)</option>
+                                <option value="Reddedildi">Reddedildi (Kırmızı)</option>
+                                <option value="İptal">İptal Edildi</option>
+                                <option value="Tamamlandı">Tamamlandı</option>
+                            </select>
+                            <span asp-validation-for="Durum" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="TarihSaat" class="control-label fw-bold"></label>
+                            <input asp-for="TarihSaat" class="form-control" />
+                            <span asp-validation-for="TarihSaat" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AntrenorId" class="control-label fw-bold"></label>
+                            <select asp-for="AntrenorId" class="form-select" asp-items="ViewBag.AntrenorId"></select>
+                            <span asp-validation-for="AntrenorId" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="HizmetId" class="control-label fw-bold"></label>
+                            <select asp-for="HizmetId" class="form-select" asp-items="ViewBag.HizmetId"></select>
+                            <span asp-validation-for="HizmetId" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <input type="submit" value="Değişiklikleri Kaydet" class="btn btn-warning" />
+                            <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Durum" class="control-label"></label>
-                <input asp-for="Durum" class="form-control" />
-                <span asp-validation-for="Durum" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UyeId" class="control-label"></label>
-                <select asp-for="UyeId" class="form-control" asp-items="ViewBag.UyeId"></select>
-                <span asp-validation-for="UyeId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AntrenorId" class="control-label"></label>
-                <select asp-for="AntrenorId" class="form-control" asp-items="ViewBag.AntrenorId"></select>
-                <span asp-validation-for="AntrenorId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="HizmetId" class="control-label"></label>
-                <select asp-for="HizmetId" class="form-control" asp-items="ViewBag.HizmetId"></select>
-                <span asp-validation-for="HizmetId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SporSalonuYonetim.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    // KURAL 1: İçeri girmek için Üye veya Admin olmak yeterli (Admin zorunluluğunu buradan kaldırdık)
+    [Authorize]
     public class AntrenorsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,6 +21,10 @@ namespace SporSalonuYonetim.Controllers
         {
             _context = context;
         }
+
+        // ---------------------------------------------------------------
+        // OKUMA İŞLEMLERİ (HERKES GÖREBİLİR)
+        // ---------------------------------------------------------------
 
         // GET: Antrenors
         public async Task<IActionResult> Index()
@@ -41,21 +46,19 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // ---------------------------------------------------------------
-        // CREATE İŞLEMLERİ (Hizmetlerden Veri Çekme Burada)
+        // YÖNETİM İŞLEMLERİ (SADECE ADMIN YAPABİLİR)
         // ---------------------------------------------------------------
 
         // GET: Antrenors/Create
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public IActionResult Create()
         {
-            // DEĞİŞİKLİK BURADA: 
-            // Listeyi elle yazmak yerine veritabanındaki HİZMETLER tablosundan çekiyoruz.
-            // .Distinct() komutu aynı isimden iki tane varsa birini alır (Tekrarı önler).
+            // Hizmet listesini veritabanından çekiyoruz
             var hizmetIsimleri = _context.Hizmetler
                                          .Select(h => h.Ad)
                                          .Distinct()
                                          .ToList();
 
-            // Eğer hiç hizmet yoksa uyarı verelim ki boş gelmesin
             if (hizmetIsimleri.Count == 0)
             {
                 hizmetIsimleri.Add("Lütfen Önce Hizmet Ekleyiniz");
@@ -68,6 +71,7 @@ namespace SporSalonuYonetim.Controllers
         // POST: Antrenors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public async Task<IActionResult> Create([Bind("AntrenorId,AdSoyad,UzmanlikAlani,CalismaBaslangic,CalismaBitis")] Antrenor antrenor)
         {
             if (ModelState.IsValid)
@@ -77,16 +81,12 @@ namespace SporSalonuYonetim.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Hata olursa listeyi tekrar veritabanından çekip gönderiyoruz
             ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
             return View(antrenor);
         }
 
-        // ---------------------------------------------------------------
-        // EDIT İŞLEMLERİ
-        // ---------------------------------------------------------------
-
         // GET: Antrenors/Edit/5
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -94,7 +94,6 @@ namespace SporSalonuYonetim.Controllers
             var antrenor = await _context.Antrenorler.FindAsync(id);
             if (antrenor == null) return NotFound();
 
-            // Düzenleme sayfasında da veritabanındaki hizmetleri gösteriyoruz
             ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
 
             return View(antrenor);
@@ -103,6 +102,7 @@ namespace SporSalonuYonetim.Controllers
         // POST: Antrenors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public async Task<IActionResult> Edit(int id, [Bind("AntrenorId,AdSoyad,UzmanlikAlani,CalismaBaslangic,CalismaBitis")] Antrenor antrenor)
         {
             if (id != antrenor.AntrenorId) return NotFound();
@@ -122,16 +122,12 @@ namespace SporSalonuYonetim.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Hata olursa listeyi tekrar yükle
             ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
             return View(antrenor);
         }
 
-        // ---------------------------------------------------------------
-        // DELETE İŞLEMLERİ
-        // ---------------------------------------------------------------
-
         // GET: Antrenors/Delete/5
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -147,6 +143,7 @@ namespace SporSalonuYonetim.Controllers
         // POST: Antrenors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var antrenor = await _context.Antrenorler.FindAsync(id);

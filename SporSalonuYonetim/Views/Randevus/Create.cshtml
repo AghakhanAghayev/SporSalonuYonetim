@@ -1,46 +1,106 @@
 ﻿@model SporSalonuYonetim.Models.Randevu
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Yeni Randevu Al";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <h1>Yeni Randevu Oluştur</h1>
+    <hr />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="All" class="text-danger"></div>
 
-<h4>Randevu</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TarihSaat" class="control-label"></label>
-                <input asp-for="TarihSaat" class="form-control" />
-                <span asp-validation-for="TarihSaat" class="text-danger"></span>
+                        <div class="form-group mb-3">
+                            <label asp-for="TarihSaat" class="control-label fw-bold">Randevu Tarihi ve Saati</label>
+                            <input asp-for="TarihSaat" type="datetime-local" class="form-control"
+                                   value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="TarihSaat" class="text-danger"></span>
+                        </div>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="form-group mb-3 p-3 bg-light border rounded">
+                                <label asp-for="UyeId" class="control-label fw-bold text-danger">Üye Seçimi (Sadece Admin)</label>
+                                <select asp-for="UyeId" class="form-select" asp-items="ViewBag.UyeId">
+                                    <option value="">-- Kendime Randevu Al --</option>
+                                </select>
+                                <small class="text-muted">Bir üye seçmezseniz randevu size (Admin) yazılır.</small>
+                            </div>
+                        }
+
+                        <div class="form-group mb-3">
+                            <label asp-for="AntrenorId" class="control-label fw-bold">Antrenör Seçiniz</label>
+                            <select asp-for="AntrenorId" id="antrenorSelect" class="form-select" asp-items="ViewBag.AntrenorId">
+                                <option value="">-- Önce Antrenör Seçin --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="HizmetId" class="control-label fw-bold">Hizmet Türü</label>
+                            <select asp-for="HizmetId" id="hizmetSelect" class="form-select" asp-items="ViewBag.HizmetId">
+                                <option value="" class="tum-hizmetler">-- Önce Antrenör Seçiniz --</option>
+                            </select>
+                            <small class="text-muted" id="hizmetUyari">Lütfen yukarıdan antrenör seçiniz.</small>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <input type="submit" value="Randevuyu Onaya Gönder" class="btn btn-primary btn-lg" />
+                            <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Durum" class="control-label"></label>
-                <input asp-for="Durum" class="form-control" />
-                <span asp-validation-for="Durum" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AntrenorId" class="control-label"></label>
-                <select asp-for="AntrenorId" class ="form-control" asp-items="ViewBag.AntrenorId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="HizmetId" class="control-label"></label>
-                <select asp-for="HizmetId" class ="form-control" asp-items="ViewBag.HizmetId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // AKILLI FİLTRELEME SCRİPTİ
+        // Antrenör seçildiğinde, parantez içindeki uzmanlığı (Örn: Judo) okur
+        // ve Hizmetler listesinde sadece "Judo" olanı gösterir.
+
+        document.getElementById('antrenorSelect').addEventListener('change', function() {
+            var secilenMetin = this.options[this.selectedIndex].text; // Örn: "Ahmet (Judo)"
+            var hizmetSelect = document.getElementById('hizmetSelect');
+            var hizmetOptions = hizmetSelect.options;
+
+            // Parantez içindeki kelimeyi bul (Judo)
+            var uzmanlik = "";
+            var parantezIci = secilenMetin.match(/\(([^)]+)\)/);
+            if (parantezIci) {
+                uzmanlik = parantezIci[1].trim(); // "Judo"
+            }
+
+            // Hizmetleri filtrele
+            var bulunanVarMi = false;
+            for (var i = 0; i < hizmetOptions.length; i++) {
+                var option = hizmetOptions[i];
+                var hizmetAdi = option.text;
+
+                if (uzmanlik === "" || hizmetAdi.includes(uzmanlik) || option.value === "") {
+                    option.style.display = "block"; // Göster
+                    if(hizmetAdi.includes(uzmanlik)) found = true;
+                } else {
+                    option.style.display = "none"; // Gizle
+                }
+            }
+
+            // Kullanıcıyı bilgilendir
+            document.getElementById('hizmetUyari').innerText = uzmanlik
+                ? "Otomatik filtrelendi: Sadece " + uzmanlik + " dersleri görünüyor."
+                : "Tüm hizmetler görünüyor.";
+
+            // Seçimi sıfırla
+            hizmetSelect.value = "";
+        });
+    </script>
 }

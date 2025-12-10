@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SporSalonuYonetim.Data;
 using SporSalonuYonetim.Models;
-using System.Linq;
 
 namespace SporSalonuYonetim.Controllers
 {
-    [Route("api/[controller]")]
+    // BURAYI DEĞİŞTİRDİK: Artık adresimiz çok basit
+    [Route("api/antrenor")]
     [ApiController]
     public class AntrenorlerApiController : ControllerBase
     {
@@ -16,24 +17,31 @@ namespace SporSalonuYonetim.Controllers
             _context = context;
         }
 
-        // GET: api/AntrenorlerApi
-        // Bu adres çağrıldığında tüm antrenörleri JSON olarak verir.
-        [HttpGet]
-        public IActionResult GetAntrenorler()
+        // 1. TÜMÜNÜ GETİR
+        // Link: https://localhost:XXXX/api/antrenor/listele
+        [HttpGet("listele")]
+        public async Task<IActionResult> GetAntrenorler()
         {
-            var antrenorler = _context.Antrenorler.ToList();
+            var antrenorler = await _context.Antrenorler.ToListAsync();
             return Ok(antrenorler);
         }
 
-        // GET: api/AntrenorlerApi/Uzmanlik/Fitness
-        // LINQ Sorgusu ile Filtreleme İsteri (Madde 4'teki şart)
-        [HttpGet("Uzmanlik/{alan}")]
-        public IActionResult GetAntrenorlerByUzmanlik(string alan)
+        // 2. LINQ İLE FİLTRELE (Hocanın İstediği Kritik Madde)
+        // Link: https://localhost:XXXX/api/antrenor/uzmanlik/Fitness
+        [HttpGet("uzmanlik/{alan}")]
+        public async Task<IActionResult> GetByUzmanlik(string alan)
         {
-            var filtrelenmis = _context.Antrenorler
-                                .Where(a => a.UzmanlikAlani.Contains(alan))
-                                .ToList();
-            return Ok(filtrelenmis);
+            // İŞTE LINQ SORGUSU BURADA: .Where(...)
+            var filtrelenmisListe = await _context.Antrenorler
+                                          .Where(a => a.UzmanlikAlani.Contains(alan))
+                                          .ToListAsync();
+
+            if (!filtrelenmisListe.Any())
+            {
+                return NotFound($"{alan} alanında uzman antrenör bulunamadı.");
+            }
+
+            return Ok(filtrelenmisListe);
         }
     }
 }

@@ -12,16 +12,23 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// 2. IDENTITY Ayarları
+// 2. IDENTITY Ayarları (GÜNCELLENDİ)
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
+    // Şifre Kuralları (Senin ayarların)
     options.Password.RequiredLength = 3;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireDigit = false;
+
+    // Email ve Giriş Kuralları
     options.User.RequireUniqueEmail = true;
     options.SignIn.RequireConfirmedAccount = false;
+
+    // --- KRİTİK AYAR BURASI ---
+    // Varsayılan karakterlere " " (BOŞLUK) ekledik. Artık "Ad Soyad" yazılabilir.
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -37,14 +44,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 // 4. Sahte Email Servisi
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 
-// 5. JSON AYARLARI VE SWAGGER (YENİ EKLENEN KISIM)
-// Döngü hatasını (Cycle Detection) engellemek için:
+// 5. JSON AYARLARI VE SWAGGER
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 builder.Services.AddRazorPages();
 
-// Swagger Servislerini Ekle (API Dokümantasyonu)
+// Swagger Servisleri
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -70,6 +76,7 @@ using (var scope = app.Services.CreateScope())
 
         if (adminUser == null)
         {
+            // Admin'in kullanıcı adı da email ile aynı kalsın (veya değiştirebilirsin)
             adminUser = new IdentityUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
             await userManager.CreateAsync(adminUser, "sau");
             await userManager.AddToRoleAsync(adminUser, "Admin");
@@ -82,15 +89,15 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 7. Pipeline Ayarları ve Swagger Aktivasyonu
+// 7. Pipeline Ayarları
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-// SWAGGER'I BURADA AKTİF EDİYORUZ
 else
 {
+    // Swagger Aktif
     app.UseSwagger();
     app.UseSwaggerUI();
 }
