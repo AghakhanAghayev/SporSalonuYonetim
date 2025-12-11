@@ -1,99 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+﻿@page
+@model LoginModel
 
-namespace SporSalonuYonetim.Areas.Identity.Pages.Account
-{
-    public class LoginModel : PageModel
-    {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly ILogger<LoginModel> _logger;
-        // Kullanıcıyı bulmak için gerekli yönetici
-        private readonly UserManager<IdentityUser> _userManager;
+@{
+    ViewData["Title"] = "Giriş Yap";
+}
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, 
-            ILogger<LoginModel> logger,
-            UserManager<IdentityUser> userManager)
-        {
-            _signInManager = signInManager;
-            _logger = logger;
-            _userManager = userManager;
-        }
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-5">
 
-        [BindProperty]
-        public InputModel Input { get; set; }
+                    <h2 class="text-center mb-4 fw-bold text-primary">Giriş Yap</h2>
 
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
+                    <form id="account" method="post">
 
-        public string ReturnUrl { get; set; }
+                        @if (Model.DebugMessage != null)
+                        {
+                            <div class="alert alert-danger fw-bold text-center shadow-sm" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill"></i> @Model.DebugMessage
+                            </div>
+                        }
 
-        [TempData]
-        public string ErrorMessage { get; set; }
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
-        public class InputModel
-        {
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                            <label asp-for="Input.Email" class="form-label">Email Adresi</label>
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
 
-            [Required]
-            [DataType(DataType.Password)]
-            public string Password { get; set; }
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                            <label asp-for="Input.Password" class="form-label">Şifre</label>
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        </div>
 
-            [Display(Name = "Beni Hatırla?")]
-            public bool RememberMe { get; set; }
-        }
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" asp-for="Input.RememberMe" />
+                            <label class="form-check-label" asp-for="Input.RememberMe">
+                                Beni Hatırla
+                            </label>
+                        </div>
 
-        public async Task OnGetAsync(string returnUrl = null)
-        {
-            if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                ModelState.AddModelError(string.Empty, ErrorMessage);
-            }
+                        <div class="d-grid mb-3">
+                            <button id="login-submit" type="submit" class="btn btn-primary btn-lg fw-bold">Giriş Yap</button>
+                        </div>
 
-            returnUrl ??= Url.Content("~/");
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-            ReturnUrl = returnUrl;
-        }
+                        <div class="text-center mt-3">
+                            <p class="mb-1">
+                                <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none">Şifrenizi mi unuttunuz?</a>
+                            </p>
+                            <p class="mb-1">
+                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none fw-bold">Yeni üye kaydı oluştur</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-        {
-            returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            if (ModelState.IsValid)
-            {
-                // 1. Mail adresine sahip kullanıcıyı bul
-                var user = await _userManager.FindByEmailAsync(Input.Email);
-
-                if (user != null)
-                {
-                    // 2. Kullanıcının 'UserName'i (Ad Soyad) ile giriş yap
-                    var result = await _signInManager.PasswordSignInAsync(user.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                    
-                    if (result.Succeeded)
-                    {
-                        _logger.LogInformation("Kullanıcı giriş yaptı.");
-                        return LocalRedirect(returnUrl);
-                    }
-                }
-                
-                // Hata durumu
-                ModelState.AddModelError(string.Empty, "Giriş başarısız. Email veya şifre hatalı.");
-                return Page();
-            }
-
-            return Page();
-        }
-    }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }
