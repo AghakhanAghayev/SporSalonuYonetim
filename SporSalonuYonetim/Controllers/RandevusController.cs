@@ -22,14 +22,44 @@ namespace SporSalonuYonetim.Controllers
             _context = context;
         }
 
-        // GET: Randevus
+        // -------------------------------------------------------------------
+        // INDEX (LİSTELEME) - OTOMATİK TAMAMLANDI KONTROLÜ BURADA
+        // -------------------------------------------------------------------
         public async Task<IActionResult> Index()
         {
-            var randevular = _context.Randevular
+            var randevular = await _context.Randevular
                 .Include(r => r.Antrenor)
-                .Include(r => r.Hizmet)
-                .Include(r => r.Uye);
-            return View(await randevular.ToListAsync());
+                .Include(r => r.Hizmet) // Hizmet süresi için gerekli
+                .Include(r => r.Uye)
+                .ToListAsync();
+
+            // OTOMATİK DURUM GÜNCELLEME (Tamamlandı)
+            bool degisiklikVarMi = false;
+            foreach (var item in randevular)
+            {
+                // Eğer randevu aktifse (İptal veya Red değilse) ve süresi dolmuşsa
+                if (item.Durum != "İptal" && item.Durum != "Reddedildi" && item.Durum != "Tamamlandı")
+                {
+                    // Hizmet süresini ekleyerek bitiş zamanını bul
+                    DateTime bitisZamani = item.TarihSaat.AddMinutes(item.Hizmet.SureDakika);
+
+                    // Şu anki zaman, bitiş zamanını geçtiyse "Tamamlandı" yap
+                    if (DateTime.Now > bitisZamani)
+                    {
+                        item.Durum = "Tamamlandı";
+                        _context.Update(item);
+                        degisiklikVarMi = true;
+                    }
+                }
+            }
+
+            // Eğer veritabanında bir şey değiştirdiysek kaydedelim
+            if (degisiklikVarMi)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return View(randevular);
         }
 
         // GET: Randevus/Details/5
@@ -49,7 +79,38 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // -------------------------------------------------------------------
-        // CREATE (RANDEVU ALMA) - MANTIK KONTROLLERİ BURADA
+        // YENİ ÖZELLİK: RANDEVU İPTAL ETME (ÜYE VE ADMİN İÇİN)
+        // -------------------------------------------------------------------
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IptalEt(int id)
+        {
+            var randevu = await _context.Randevular.FindAsync(id);
+            if (randevu == null) return NotFound();
+
+            // Güvenlik: Başkasının randevusunu iptal etmeye çalışıyorsa engelle (Admin hariç)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && randevu.UyeId != userId)
+            {
+                return Unauthorized();
+            }
+
+            // Kural: Geçmiş randevu iptal edilemez
+            if (randevu.TarihSaat < DateTime.Now)
+            {
+                TempData["Hata"] = "Geçmiş randevular iptal edilemez.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            randevu.Durum = "İptal";
+            _context.Update(randevu);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // -------------------------------------------------------------------
+        // CREATE (RANDEVU ALMA)
         // -------------------------------------------------------------------
 
         // GET: Randevus/Create
@@ -79,39 +140,37 @@ namespace SporSalonuYonetim.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("RandevuId,TarihSaat,Durum,UyeId,AntrenorId,HizmetId")] Randevu randevu)
         {
-            // 1. ÜYE ATAMASI
             if (!User.IsInRole("Admin") || string.IsNullOrEmpty(randevu.UyeId))
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 randevu.UyeId = userId;
             }
 
-            // 2. OTOMATİK DURUM
             randevu.Durum = "Bekliyor";
 
-            // 3. MODEL TEMİZLİĞİ
             ModelState.Remove("UyeId");
             ModelState.Remove("Uye");
             ModelState.Remove("Durum");
             ModelState.Remove("Antrenor");
             ModelState.Remove("Hizmet");
 
-            // ========================================================================
-            // 🕵️‍♂️ KRİTİK KONTROLLER (MESAİ VE ÇAKIŞMA)
-            // ========================================================================
+            // --- KONTROLLER BAŞLIYOR ---
 
-            // A) Seçilen Antrenör ve Hizmet bilgilerini veritabanından çekelim
+            // 1. GEÇMİŞ TARİH KONTROLÜ
+            if (randevu.TarihSaat < DateTime.Now)
+            {
+                ModelState.AddModelError("TarihSaat", "Geçmiş bir tarihe randevu alamazsınız.");
+            }
+
             var secilenAntrenor = await _context.Antrenorler.FindAsync(randevu.AntrenorId);
             var secilenHizmet = await _context.Hizmetler.FindAsync(randevu.HizmetId);
 
             if (secilenAntrenor != null && secilenHizmet != null)
             {
-                // Randevunun biteceği saati hesapla (Başlangıç + Hizmet Süresi)
                 DateTime baslangicZamani = randevu.TarihSaat;
                 DateTime bitisZamani = baslangicZamani.AddMinutes(secilenHizmet.SureDakika);
 
-                // --- KONTROL 1: ANTRENÖR MESAİ SAATLERİ ---
-                // Sadece saat kısmını (TimeSpan) karşılaştırıyoruz.
+                // 2. MESAİ SAATİ KONTROLÜ
                 TimeSpan randevuBaslangicSaat = baslangicZamani.TimeOfDay;
                 TimeSpan randevuBitisSaat = bitisZamani.TimeOfDay;
 
@@ -119,14 +178,16 @@ namespace SporSalonuYonetim.Controllers
                     randevuBitisSaat > secilenAntrenor.CalismaBitis)
                 {
                     ModelState.AddModelError("TarihSaat",
-                        $"Antrenör bu saatlerde çalışmıyor. Mesai saatleri: {secilenAntrenor.CalismaBaslangic} - {secilenAntrenor.CalismaBitis}");
+                        $"Antrenör bu saatlerde çalışmıyor. Mesai: {secilenAntrenor.CalismaBaslangic} - {secilenAntrenor.CalismaBitis}");
                 }
 
-                // --- KONTROL 2: RANDEVU ÇAKIŞMASI (OVERLAP) ---
-                // Aynı antrenörün, aynı günündeki diğer randevularına bak.
+                // 3. ÇAKIŞMA KONTROLÜ (İptal edilenler hariç)
                 var cakismanRandevular = await _context.Randevular
-                    .Include(r => r.Hizmet) // Hizmet süresini bilmemiz lazım
-                    .Where(r => r.AntrenorId == randevu.AntrenorId && r.TarihSaat.Date == randevu.TarihSaat.Date)
+                    .Include(r => r.Hizmet)
+                    .Where(r => r.AntrenorId == randevu.AntrenorId
+                             && r.TarihSaat.Date == randevu.TarihSaat.Date
+                             && r.Durum != "İptal"
+                             && r.Durum != "Reddedildi")
                     .ToListAsync();
 
                 foreach (var mevcutRandevu in cakismanRandevular)
@@ -134,16 +195,15 @@ namespace SporSalonuYonetim.Controllers
                     DateTime mevcutBaslangic = mevcutRandevu.TarihSaat;
                     DateTime mevcutBitis = mevcutBaslangic.AddMinutes(mevcutRandevu.Hizmet.SureDakika);
 
-                    // Çakışma Mantığı: (YeniBaşlangıç < MevcutBitiş) VE (YeniBitiş > MevcutBaşlangıç)
                     if (baslangicZamani < mevcutBitis && bitisZamani > mevcutBaslangic)
                     {
                         ModelState.AddModelError("TarihSaat",
                             $"Seçilen saatte antrenör dolu! ({mevcutBaslangic.ToShortTimeString()} - {mevcutBitis.ToShortTimeString()} arası dolu)");
-                        break; // İlk çakışmada hatayı ver ve döngüden çık
+                        break;
                     }
                 }
             }
-            // ========================================================================
+            // --- KONTROLLER BİTTİ ---
 
             if (ModelState.IsValid)
             {
@@ -152,7 +212,6 @@ namespace SporSalonuYonetim.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // HATA VARSA SAYFAYI TEKRAR DOLDUR
             var antrenorListesi = _context.Antrenorler
                 .Select(a => new { a.AntrenorId, AdVeUzmanlik = a.AdSoyad + " (" + a.UzmanlikAlani + ")" })
                 .ToList();
@@ -169,9 +228,8 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // -------------------------------------------------------------------
-        // EDIT VE DELETE İŞLEMLERİ (SADECE ADMIN)
+        // EDIT VE DELETE (ADMİN)
         // -------------------------------------------------------------------
-
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();

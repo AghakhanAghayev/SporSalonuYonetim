@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Randevu Takvimi";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 
 <div class="container mt-4">
@@ -12,6 +13,11 @@
         </a>
     </div>
     <hr />
+
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Hata"]</div>
+    }
 
     <table class="table table-hover shadow-sm mt-3">
         <thead class="table-dark">
@@ -36,6 +42,10 @@
                         @if (item.Durum == "Onaylandı")
                         {
                             <span class="badge bg-success">Onaylandı</span>
+                        }
+                        else if (item.Durum == "Tamamlandı")
+                        {
+                            <span class="badge bg-secondary">Tamamlandı</span>
                         }
                         else if (item.Durum == "Reddedildi" || item.Durum == "İptal")
                         {
@@ -64,11 +74,22 @@
                     <td>
                         <a asp-action="Details" asp-route-id="@item.RandevuId" class="btn btn-sm btn-info text-white">Detay</a>
 
+                        @if ((item.Durum == "Bekliyor" || item.Durum == "Onaylandı") && item.TarihSaat > DateTime.Now)
+                        {
+                            @if (User.IsInRole("Admin") || item.UyeId == currentUserId)
+                            {
+                                <form asp-action="IptalEt" asp-route-id="@item.RandevuId" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Randevuyu iptal etmek istediğinize emin misiniz?');">
+                                        İptal Et
+                                    </button>
+                                </form>
+                            }
+                        }
+
                         @if (User.IsInRole("Admin"))
                         {
                             <span>|</span>
-                            <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-warning">Durumu Güncelle</a>
-                            <span>|</span>
+                            <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-warning">Yönet</a>
                             <a asp-action="Delete" asp-route-id="@item.RandevuId" class="btn btn-sm btn-danger">Sil</a>
                         }
                     </td>
