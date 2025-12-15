@@ -5,96 +5,115 @@
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <h1>Randevu Takvimi</h1>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-calendar-plus"></i> Yeni Randevu Al
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800 fw-bold"><i class="bi bi-calendar-check text-primary"></i> Randevu Yönetimi</h2>
+        <a asp-action="Create" class="btn btn-primary btn-icon-split">
+            <span class="icon text-white-50">
+                <i class="bi bi-plus-lg"></i>
+            </span>
+            <span class="text">Yeni Randevu Al</span>
         </a>
     </div>
-    <hr />
 
     @if (TempData["Hata"] != null)
     {
-        <div class="alert alert-danger">@TempData["Hata"]</div>
+        <div class="alert alert-danger shadow-sm border-0 border-start border-danger border-5">
+            <i class="bi bi-exclamation-circle-fill"></i> @TempData["Hata"]
+        </div>
     }
 
-    <table class="table table-hover shadow-sm mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Tarih & Saat</th>
-                <th>Durum</th>
-                <th>Üye</th>
-                <th>Antrenör</th>
-                <th>Hizmet</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="fw-bold">
-                        @item.TarihSaat.ToString("dd.MM.yyyy HH:mm")
-                    </td>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Aktif Randevular</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Tarih & Saat</th>
+                            <th>Durum</th>
+                            <th>Üye</th>
+                            <th>Antrenör</th>
+                            <th>Hizmet</th>
+                            <th class="text-center">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-dark">
+                                    <i class="bi bi-clock-history text-secondary me-2"></i>@item.TarihSaat.ToString("dd.MM.yyyy HH:mm")
+                                </td>
 
-                    <td>
-                        @if (item.Durum == "Onaylandı")
-                        {
-                            <span class="badge bg-success">Onaylandı</span>
-                        }
-                        else if (item.Durum == "Tamamlandı")
-                        {
-                            <span class="badge bg-secondary">Tamamlandı</span>
-                        }
-                        else if (item.Durum == "Reddedildi" || item.Durum == "İptal")
-                        {
-                            <span class="badge bg-danger">@item.Durum</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-warning text-dark">Bekliyor</span>
-                        }
-                    </td>
+                                <td>
+                                    @if (item.Durum == "Onaylandı")
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Onaylandı</span>
+                                    }
+                                    else if (item.Durum == "Tamamlandı")
+                                    {
+                                        <span class="badge bg-secondary"><i class="bi bi-flag-fill"></i> Tamamlandı</span>
+                                    }
+                                    else if (item.Durum == "İptal")
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle"></i> İptal</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Bekliyor</span>
+                                    }
+                                </td>
 
-                    <td>
-                        @if (item.Uye != null)
-                        {
-                            <span class="fw-bold text-primary">@item.Uye.UserName</span>
-                        }
-                        else
-                        {
-                            <span>Misafir</span>
-                        }
-                    </td>
+                                <td>
+                                    @if (item.Uye != null)
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width:30px; height:30px;">
+                                                @item.Uye.UserName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <span>@item.Uye.UserName</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span>Misafir</span>
+                                    }
+                                </td>
 
-                    <td>@Html.DisplayFor(modelItem => item.Antrenor.AdSoyad)</td>
-                    <td>@Html.DisplayFor(modelItem => item.Hizmet.Ad)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Antrenor.AdSoyad)</td>
+                                <td><span class="text-info fw-bold">@Html.DisplayFor(modelItem => item.Hizmet.Ad)</span></td>
 
-                    <td>
-                        <a asp-action="Details" asp-route-id="@item.RandevuId" class="btn btn-sm btn-info text-white">Detay</a>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.RandevuId" class="btn btn-sm btn-info text-white" title="Detay"><i class="bi bi-eye"></i></a>
 
-                        @if ((item.Durum == "Bekliyor" || item.Durum == "Onaylandı") && item.TarihSaat > DateTime.Now)
-                        {
-                            @if (User.IsInRole("Admin") || item.UyeId == currentUserId)
-                            {
-                                <form asp-action="IptalEt" asp-route-id="@item.RandevuId" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Randevuyu iptal etmek istediğinize emin misiniz?');">
-                                        İptal Et
-                                    </button>
-                                </form>
-                            }
+                                        @if ((item.Durum == "Bekliyor" || item.Durum == "Onaylandı") && item.TarihSaat > DateTime.Now)
+                                        {
+                                            @if (User.IsInRole("Admin") || item.UyeId == currentUserId)
+                                            {
+                                                <form asp-action="IptalEt" asp-route-id="@item.RandevuId" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-warning text-dark" onclick="return confirm('Randevuyu iptal etmek istediğinize emin misiniz?');" title="İptal Et">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-primary" title="Düzenle"><i class="bi bi-pencil-square"></i></a>
+                                            <a asp-action="Delete" asp-route-id="@item.RandevuId" class="btn btn-sm btn-danger" title="Sil"><i class="bi bi-trash"></i></a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
                         }
-
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <span>|</span>
-                            <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-warning">Yönet</a>
-                            <a asp-action="Delete" asp-route-id="@item.RandevuId" class="btn btn-sm btn-danger">Sil</a>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

@@ -2,10 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
+using System.Web; // URL Encode için gerekli
 
 namespace SporSalonuYonetim.Controllers
 {
-    [Authorize] // Sadece "Giriş yapmış" herhangi biri girebilir
+    [Authorize]
     public class YapayZekaController : Controller
     {
         private readonly string _apiKey;
@@ -15,6 +16,7 @@ namespace SporSalonuYonetim.Controllers
         {
             _apiKey = configuration["GeminiApiKey"];
             _httpClient = new HttpClient();
+            _httpClient.Timeout = TimeSpan.FromMinutes(5);
         }
 
         [HttpGet]
@@ -36,11 +38,13 @@ namespace SporSalonuYonetim.Controllers
 
                 if (gorselIste)
                 {
-                    // BURASI ÇOK ÖNEMLİ: Gemini'ye "Bize resim için kod ver" diyoruz.
                     promptBuilder.AppendLine("\n--- ÖZEL İSTEK ---");
                     promptBuilder.AppendLine("Cevabının EN SONUNA, '###RESIM_KODU:' diye bir başlık aç.");
-                    promptBuilder.AppendLine("Bu başlığın yanına, bu kişinin hedefine ulaştığındaki halini tarif eden KISA ve İNGİLİZCE bir cümle yaz.");
-                    promptBuilder.AppendLine("Örnek format: ###RESIM_KODU: muscular man in gym, fitness model body, cinematic lighting, 8k");
+                    // 🔥 GERÇEKÇİ GÖRSEL AYARI 🔥
+                    promptBuilder.AppendLine("Bu başlığın yanına, bu kişinin hedefine ulaştığındaki halini tarif eden İNGİLİZCE bir cümle yaz.");
+                    promptBuilder.AppendLine("Lütfen 'photorealistic, real photo, 4k, highly detailed, gym environment' kelimelerini MUTLAKA kullan.");
+                    promptBuilder.AppendLine("Asla çizim veya karikatür (illustration, cartoon) olmasın.");
+                    promptBuilder.AppendLine("Örnek format: ###RESIM_KODU: realistic photo of a fit man in gym, 4k, highly detailed");
                 }
 
                 var modelId = "gemini-2.5-flash";
@@ -59,23 +63,32 @@ namespace SporSalonuYonetim.Controllers
                 {
                     using (JsonDocument doc = JsonDocument.Parse(responseString))
                     {
-                        string fullText = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
-
-                        // 2. Cevabı Parçalama (Metin ve Resim Kodu)
-                        if (fullText.Contains("###RESIM_KODU:"))
+                        if (doc.RootElement.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
                         {
-                            var parts = fullText.Split(new string[] { "###RESIM_KODU:" }, StringSplitOptions.RemoveEmptyEntries);
-                            ViewBag.Cevap = parts[0].Trim(); // Antrenman Programı
+                            var textPart = candidates[0].GetProperty("content").GetProperty("parts")[0];
+                            string fullText = textPart.GetProperty("text").GetString();
 
-                            // Resim Promptunu alıyoruz (İngilizce cümle)
-                            if (parts.Length > 1)
+                            // 2. Cevabı Parçalama
+                            if (fullText.Contains("###RESIM_KODU:"))
                             {
-                                ViewBag.ResimPrompt = parts[1].Trim();
+                                var parts = fullText.Split(new string[] { "###RESIM_KODU:" }, StringSplitOptions.RemoveEmptyEntries);
+                                ViewBag.Cevap = parts[0].Trim();
+
+                                if (parts.Length > 1)
+                                {
+                                    // URL İçin Temizleme (Boşlukları %20 yapma vb.)
+                                    string rawPrompt = parts[1].Trim();
+                                    ViewBag.ResimUrl = $"https://image.pollinations.ai/prompt/{HttpUtility.UrlEncode(rawPrompt)}?width=1024&height=1024&nologo=true&seed={new Random().Next(1, 9999)}";
+                                }
+                            }
+                            else
+                            {
+                                ViewBag.Cevap = fullText;
                             }
                         }
                         else
                         {
-                            ViewBag.Cevap = fullText;
+                            ViewBag.Cevap = "Yapay zeka yanıt oluşturamadı.";
                         }
                     }
                 }

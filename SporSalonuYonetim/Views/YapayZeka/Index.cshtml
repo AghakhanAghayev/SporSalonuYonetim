@@ -1,91 +1,104 @@
 ﻿@{
-    ViewData["Title"] = "AI Antrenör & Görselleştirme";
+    ViewData["Title"] = "AI Antrenör";
 }
 
-<div class="container mt-5 mb-5">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-dark text-white p-4">
-                    <h2 class="card-title mb-0">🤖 AI Spor Koçu & Görselleştirme</h2>
+        <div class="col-md-5">
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="m-0 fw-bold"><i class="bi bi-robot"></i> Yapay Zeka Antrenör</h5>
                 </div>
                 <div class="card-body p-4">
+                    <p class="text-muted small mb-4">Vücut ölçülerini gir, hedefini menüden seç ve programını al.</p>
 
-                    <form asp-action="Danis" method="post">
+                    <form asp-controller="YapayZeka" asp-action="Danis" method="post">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label">Yaş</label>
-                                <input type="number" class="form-control" name="yas" required value="@ViewBag.EskiYas" placeholder="22" />
+                                <label class="form-label fw-bold">Yaş</label>
+                                <input type="number" name="yas" class="form-control" value="@ViewBag.EskiYas" required placeholder="25">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Boy (cm)</label>
-                                <input type="number" class="form-control" name="boy" required value="@ViewBag.EskiBoy" placeholder="180" />
+                                <label class="form-label fw-bold">Boy (cm)</label>
+                                <input type="number" name="boy" class="form-control" value="@ViewBag.EskiBoy" required placeholder="180">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Kilo (kg)</label>
-                                <input type="number" class="form-control" name="kilo" required value="@ViewBag.EskiKilo" placeholder="75" />
+                                <label class="form-label fw-bold">Kilo (kg)</label>
+                                <input type="number" name="kilo" class="form-control" value="@ViewBag.EskiKilo" required placeholder="80">
                             </div>
                         </div>
 
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label class="form-label">Cinsiyet</label>
-                                <select class="form-select" name="cinsiyet">
-                                    <option value="Erkek">Erkek</option>
-                                    <option value="Kadın">Kadın</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Hedef</label>
-                                <select class="form-select" name="hedef">
-                                    <option value="Kilo Vermek">Kilo Vermek (Yağ Yakımı)</option>
-                                    <option value="Kas Yapmak">Kas Yapmak (Hacim)</option>
-                                    <option value="Fit Olmak">Fit Görünmek</option>
-                                </select>
-                            </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-bold">Cinsiyet</label>
+                            <select name="cinsiyet" class="form-select">
+                                <option value="Erkek">Erkek</option>
+                                <option value="Kadın">Kadın</option>
+                            </select>
                         </div>
 
-                        <div class="mt-4 p-3 bg-warning bg-opacity-10 border border-warning rounded">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="gorselIste" name="gorselIste" value="true" checked>
-                                <label class="form-check-label fw-bold" for="gorselIste">
-                                    📸 Hedef vücudumun yapay zeka fotoğrafını oluştur!
-                                </label>
-                            </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-bold">Hedefin Nedir?</label>
+                            <select name="hedef" class="form-select">
+                                <option value="Kilo Vermek (Yağ Yakımı)">Kilo Vermek (Yağ Yakımı)</option>
+                                <option value="Kas Yapmak (Hipertrofi)">Kas Yapmak (Hipertrofi)</option>
+                                <option value="Fit ve Sıkı Görünmek">Fit ve Sıkı Görünmek</option>
+                                <option value="Güç Kazanmak (Powerlifting)">Güç Kazanmak (Powerlifting)</option>
+                                <option value="Kondisyon Arttırmak">Kondisyon Arttırmak</option>
+                                <option value="Kilo Almak (Hacim)">Kilo Almak (Clean Bulk)</option>
+                            </select>
                         </div>
 
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">🚀 Programı ve Resmi Oluştur</button>
+                        <div class="form-check form-switch mt-3">
+                            <input class="form-check-input" type="checkbox" id="gorselIste" name="gorselIste" value="true" checked>
+                            <label class="form-check-label" for="gorselIste">Hedef Vücut Görseli de Oluştur</label>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg hover-scale">
+                                <i class="bi bi-magic"></i> Programı Hazırla
+                            </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
 
-                    @if (ViewBag.Cevap != null)
-                    {
-                        <hr class="my-5" />
+        <div class="col-md-7">
+            @if (ViewBag.Cevap != null)
+            {
+                <div class="card shadow-lg border-0">
+                    <div class="card-body">
+                        <h4 class="card-title text-success mb-3"><i class="bi bi-check-circle-fill"></i> Senin İçin Hazırlanan Program</h4>
 
-                        @if (!string.IsNullOrEmpty(ViewBag.ResimPrompt))
+                        @if (ViewBag.ResimUrl != null)
                         {
-                            <div class="card mb-4 border-0 shadow">
-                                <div class="card-body text-center bg-dark text-white rounded">
-                                    <h3 class="mb-3 text-warning">✨ İşte 6 Ay Sonraki Sen!</h3>
-
-                                    <img src="https://image.pollinations.ai/prompt/@ViewBag.ResimPrompt?width=800&height=600&model=flux&nologo=true"
-                                         class="img-fluid rounded shadow-lg"
-                                         alt="Yapay Zeka Tarafından Oluşturulan Hedef Vücut"
-                                         style="min-height: 300px; background-color: #333;" />
-
-                                    <p class="mt-2 text-muted small">Gerçek zamanlı AI tarafından oluşturulmuştur.</p>
+                            <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+                                <div class="row g-0">
+                                    <div class="col-md-12 position-relative">
+                                        <div class="bg-light d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                                            <img src="@ViewBag.ResimUrl" class="img-fluid w-100 rounded" alt="Hedef Vücut" style="object-fit: cover; max-height: 500px;" loading="lazy">
+                                        </div>
+                                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 text-white p-2 text-center small">
+                                            <i class="bi bi-robot"></i> Yapay Zeka Tarafından Oluşturulan Hedef Görünüm
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         }
 
-                        <div class="p-4 bg-light rounded border">
-                            <h4 class="text-primary fw-bold">🏋️ Antrenman Programın</h4>
-                            <div style="white-space: pre-wrap; font-family: sans-serif;">@ViewBag.Cevap</div>
+                        <div class="ai-response-box">
+                            @Html.Raw(ViewBag.Cevap.Replace("\n", "<br>"))
                         </div>
-                    }
+                    </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-activity fs-1 d-block mb-3"></i>
+                    <p>Henüz bir program oluşturmadın. Sol taraftan bilgilerini girip butona bas!</p>
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -1,8 +1,83 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="p-5 mb-4 bg-primary text-white rounded-3 shadow-lg position-relative overflow-hidden">
+    <div style="position: absolute; top: -50px; right: -50px; opacity: 0.1;">
+        <i class="bi bi-trophy-fill" style="font-size: 300px;"></i>
+    </div>
+
+    <div class="container-fluid py-3 position-relative">
+        <h1 class="display-4 fw-bold">Hoş Geldin, Şampiyon! 🏋️‍♂️</h1>
+        <p class="col-md-8 fs-4 mt-3">
+            Spor hedeflerine ulaşmak için doğru yerdesin. Yapay zeka destekli antrenörün, randevu sistemin ve çok daha fazlası parmaklarının ucunda.
+        </p>
+        <div class="mt-4">
+            <a asp-controller="YapayZeka" asp-action="Index" class="btn btn-light btn-lg fw-bold shadow-sm text-primary">
+                <i class="bi bi-stars"></i> AI Antrenöre Danış
+            </a>
+            <a asp-controller="Randevus" asp-action="Index" class="btn btn-outline-light btn-lg fw-bold ms-2">
+                <i class="bi bi-calendar-plus"></i> Randevu Al
+            </a>
+        </div>
+    </div>
 </div>
+
+<div class="row g-4">
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow hover-scale">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <span class="bg-info text-white rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-people-fill fs-3"></i>
+                    </span>
+                </div>
+                <h4 class="card-title fw-bold text-dark">Eğitmen Kadrosu</h4>
+                <p class="card-text text-muted">Alanında uzman antrenörlerimizi incele ve sana en uygun olanı seç.</p>
+                <a asp-controller="Antrenors" asp-action="Index" class="btn btn-outline-info w-100 mt-2">Göz At <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow hover-scale">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <span class="bg-success text-white rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-activity fs-3"></i>
+                    </span>
+                </div>
+                <h4 class="card-title fw-bold text-dark">Hizmetlerimiz</h4>
+                <p class="card-text text-muted">Fitness, Pilates, Yoga ve daha fazlası. Neler sunduğumuzu keşfet.</p>
+                <a asp-controller="Hizmets" asp-action="Index" class="btn btn-outline-success w-100 mt-2">İncele <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow hover-scale">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <span class="bg-warning text-white rounded-circle d-inline-flex justify-content-center align-items-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-geo-alt-fill fs-3"></i>
+                    </span>
+                </div>
+                <h4 class="card-title fw-bold text-dark">Salonlarımız</h4>
+                <p class="card-text text-muted">Konumlarımız, çalışma saatlerimiz ve iletişim bilgilerimiz.</p>
+                <a asp-controller="SporSalonus" asp-action="Index" class="btn btn-outline-warning w-100 mt-2 text-dark">Konumlar <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.3s ease;
+    }
+
+        .hover-scale:hover {
+            transform: translateY(-5px);
+        }
+</style>

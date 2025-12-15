@@ -23,27 +23,37 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // -------------------------------------------------------------------
-        // INDEX (LİSTELEME) - OTOMATİK TAMAMLANDI KONTROLÜ BURADA
+        // INDEX (LİSTELEME) - FİLTRELEME VE OTOMATİK TAMAMLANDI KONTROLÜ
         // -------------------------------------------------------------------
         public async Task<IActionResult> Index()
         {
-            var randevular = await _context.Randevular
+            // 1. Sorguyu Hazırla (Henüz veritabanından çekmiyoruz)
+            var randevularQuery = _context.Randevular
                 .Include(r => r.Antrenor)
                 .Include(r => r.Hizmet) // Hizmet süresi için gerekli
                 .Include(r => r.Uye)
-                .ToListAsync();
+                .AsQueryable(); // Üzerine 'Where' şartı ekleyebilmek için bunu ekledik
 
-            // OTOMATİK DURUM GÜNCELLEME (Tamamlandı)
+            // 2. KONTROL: Eğer kullanıcı ADMIN DEĞİLSE, sadece kendi randevularını görsün.
+            // Admin ise 'Where' eklenmediği için herkesi görür.
+            if (!User.IsInRole("Admin"))
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                randevularQuery = randevularQuery.Where(r => r.UyeId == currentUserId);
+            }
+
+            // 3. Veriyi şimdi çekiyoruz
+            var randevular = await randevularQuery.ToListAsync();
+
+            // 4. OTOMATİK DURUM GÜNCELLEME (Tamamlandı Kontrolü)
             bool degisiklikVarMi = false;
             foreach (var item in randevular)
             {
-                // Eğer randevu aktifse (İptal veya Red değilse) ve süresi dolmuşsa
+                // Eğer randevu aktifse ve süresi dolmuşsa
                 if (item.Durum != "İptal" && item.Durum != "Reddedildi" && item.Durum != "Tamamlandı")
                 {
-                    // Hizmet süresini ekleyerek bitiş zamanını bul
                     DateTime bitisZamani = item.TarihSaat.AddMinutes(item.Hizmet.SureDakika);
 
-                    // Şu anki zaman, bitiş zamanını geçtiyse "Tamamlandı" yap
                     if (DateTime.Now > bitisZamani)
                     {
                         item.Durum = "Tamamlandı";
@@ -53,7 +63,6 @@ namespace SporSalonuYonetim.Controllers
                 }
             }
 
-            // Eğer veritabanında bir şey değiştirdiysek kaydedelim
             if (degisiklikVarMi)
             {
                 await _context.SaveChangesAsync();
@@ -75,11 +84,18 @@ namespace SporSalonuYonetim.Controllers
 
             if (randevu == null) return NotFound();
 
+            // GÜVENLİK KONTROLÜ: Başkasının detayına bakamasın
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && randevu.UyeId != currentUserId)
+            {
+                return Unauthorized(); // Yetkisiz Erişim
+            }
+
             return View(randevu);
         }
 
         // -------------------------------------------------------------------
-        // YENİ ÖZELLİK: RANDEVU İPTAL ETME (ÜYE VE ADMİN İÇİN)
+        // RANDEVU İPTAL ETME (ÜYE VE ADMİN İÇİN)
         // -------------------------------------------------------------------
         [HttpPost]
         [ValidateAntiForgeryToken]

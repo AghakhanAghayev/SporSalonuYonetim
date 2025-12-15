@@ -1,3 +1,7 @@
 ﻿@using SporSalonuYonetim
 @using SporSalonuYonetim.Models
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, MiniProfiler.AspNetCore.Mvc
+@using StackExchange.Profiling @* <-- BU SATIR RenderPosition HATASINI ÇÖZER *@
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, MiniProfiler.AspNetCore.Mvc @* <-- BU SATIR KUTUCUĞU ÇALIŞTIRIR *@
