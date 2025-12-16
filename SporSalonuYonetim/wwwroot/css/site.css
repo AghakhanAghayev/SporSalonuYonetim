@@ -191,7 +191,6 @@ footer {
     }
 
 /* --- 8. ANİMASYONLAR --- */
-/* Sayfa yüklenirken içerik aşağıdan yukarı kaysın */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -206,4 +205,71 @@ footer {
 
 .container {
     animation: fadeInUp 0.6s ease-out;
+}
+
+/* --- 9. YAPAY ZEKA RESİM VE ETİKET ALANI (YENİ EKLENDİ) --- */
+.ai-image-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius-sm); /* Temadaki radius ile uyumlu */
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 1.5rem;
+}
+
+.ai-caption {
+    /* Alttan yukarı doğru koyulaşan siyah transparan geçiş */
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+    color: #fff;
+    padding: 40px 20px 15px 20px; /* Üstten ekstra boşluk gradient için */
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 500;
+    z-index: 2; /* Resmin üstünde kalsın */
+}
+
+.ai-badge {
+    background: var(--primary-gradient); /* Sitenin ana mor rengi */
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    margin-right: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    vertical-align: middle;
+}
+/* --- SEKME (TAB) GÖRÜNÜRLÜK DÜZELTMESİ --- */
+
+/* Tab linklerinin rengini Navbar'dan ayırıyoruz */
+.nav-tabs .nav-link {
+    color: #636e72 !important; /* PASİF DURUM: Koyu Gri (Artık görünür olacak) */
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-weight: 600;
+}
+
+    /* Üzerine gelince */
+    .nav-tabs .nav-link:hover {
+        color: #764ba2 !important; /* Mor renk */
+        background: rgba(118, 75, 162, 0.05); /* Çok hafif mor zemin */
+    }
+
+    /* Aktif (Seçili) Olan Sekme */
+    .nav-tabs .nav-link.active {
+        color: #764ba2 !important; /* Mor renk */
+        background-color: transparent !important;
+        border-bottom: 3px solid #764ba2 !important; /* Altına mor çizgi çeker */
+    }
+
+/* Navbar (Üst Menü) bozulmasın diye onu koruyalım */
+.navbar .nav-link {
+    color: rgba(255,255,255,0.85) !important; /* Üst menü beyaz kalsın */
 }

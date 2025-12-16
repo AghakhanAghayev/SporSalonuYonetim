@@ -56,7 +56,8 @@ namespace SporSalonuYonetim.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
+        // GÜNCELLEME: "ResimUrl" buraya eklendi
+        public async Task<IActionResult> Create([Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika,ResimUrl")] Hizmet hizmet)
         {
             if (ModelState.IsValid)
             {
@@ -82,7 +83,8 @@ namespace SporSalonuYonetim.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
+        // GÜNCELLEME: "ResimUrl" buraya eklendi
+        public async Task<IActionResult> Edit(int id, [Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika,ResimUrl")] Hizmet hizmet)
         {
             if (id != hizmet.HizmetId) return NotFound();
 

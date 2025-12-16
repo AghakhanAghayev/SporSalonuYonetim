@@ -9,18 +9,18 @@ using SporSalonuYonetim.Data;
 
 #nullable disable
 
-namespace SporSalonuYonetim.Data.Migrations
+namespace SporSalonuYonetim.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251207214335_IdentityGuncelleme")]
-    partial class IdentityGuncelleme
+    [Migration("20251215233337_SalonAntrenorVeSaatler")]
+    partial class SalonAntrenorVeSaatler
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -256,11 +256,16 @@ namespace SporSalonuYonetim.Data.Migrations
                     b.Property<TimeSpan>("CalismaBitis")
                         .HasColumnType("time");
 
+                    b.Property<int>("SporSalonuId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UzmanlikAlani")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AntrenorId");
+
+                    b.HasIndex("SporSalonuId");
 
                     b.ToTable("Antrenorler");
                 });
@@ -274,14 +279,13 @@ namespace SporSalonuYonetim.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HizmetId"));
 
                     b.Property<string>("Aciklama")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Ad")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Sure")
+                    b.Property<int>("SureDakika")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Ucret")
@@ -330,11 +334,15 @@ namespace SporSalonuYonetim.Data.Migrations
 
             modelBuilder.Entity("SporSalonuYonetim.Models.SporSalonu", b =>
                 {
-                    b.Property<int>("SporSalonuId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SporSalonuId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AcilisSaati")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Ad")
                         .IsRequired()
@@ -344,11 +352,26 @@ namespace SporSalonuYonetim.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CalismaSaatleri")
+                    b.Property<string>("KapanisSaati")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("SporSalonuId");
+                    b.Property<int>("Kapasite")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResimUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Sehir")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefon")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
 
                     b.ToTable("SporSalonlari");
                 });
@@ -419,6 +442,17 @@ namespace SporSalonuYonetim.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SporSalonuYonetim.Models.Antrenor", b =>
+                {
+                    b.HasOne("SporSalonuYonetim.Models.SporSalonu", "SporSalonu")
+                        .WithMany("Antrenorler")
+                        .HasForeignKey("SporSalonuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SporSalonu");
+                });
+
             modelBuilder.Entity("SporSalonuYonetim.Models.Randevu", b =>
                 {
                     b.HasOne("SporSalonuYonetim.Models.Antrenor", "Antrenor")
@@ -449,6 +483,11 @@ namespace SporSalonuYonetim.Data.Migrations
             modelBuilder.Entity("SporSalonuYonetim.Models.Antrenor", b =>
                 {
                     b.Navigation("Randevular");
+                });
+
+            modelBuilder.Entity("SporSalonuYonetim.Models.SporSalonu", b =>
+                {
+                    b.Navigation("Antrenorler");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,16 +9,21 @@ namespace SporSalonuYonetim.Models
         [Key]
         public int RandevuId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Tarih ve saat seçimi zorunludur.")]
         [Display(Name = "Randevu Tarihi ve Saati")]
+
+        // DÜZELTME BURADA: DateTime olduğu için "HH" (Büyük Harf) kullandık.
+        // Bu sayede 17:00 olarak görünür. "hh" yaparsan 05:00 görünür.
+        [DisplayFormat(DataFormatString = "{0:dd.MM.yyyy HH:mm}", ApplyFormatInEditMode = true)]
+        [DataType(DataType.DateTime)]
         public DateTime TarihSaat { get; set; }
 
         [Display(Name = "Durum")]
-        public string Durum { get; set; } = "Bekliyor"; // Bekliyor, Onaylandı, İptal [cite: 21]
+        public string Durum { get; set; } = "Bekliyor"; // Bekliyor, Onaylandı, İptal
 
         // --- İlişkiler ---
 
-        // Randevuyu alan üye (IdentityUser kullanıyoruz)
+        // Randevuyu alan üye
         public string UyeId { get; set; }
         public virtual IdentityUser Uye { get; set; }
 

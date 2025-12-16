@@ -1,36 +1,220 @@
 ﻿@model SporSalonuYonetim.Models.SporSalonu
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.Ad + " Detayları";
+    // Koordinat kontrolü ve virgül düzeltme
+    string enlem = Model.Enlem?.Replace(",", ".") ?? "";
+    string boylam = Model.Boylam?.Replace(",", ".") ?? "";
+    bool koordinatVar = !string.IsNullOrEmpty(enlem) && !string.IsNullOrEmpty(boylam);
+    // Resim yoksa varsayılan resim
+    string resimUrl = string.IsNullOrEmpty(Model.ResimUrl) ? "https://placehold.co/600x400?text=Spor+Salonu" : Model.ResimUrl;
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<div>
-    <h4>SporSalonu</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Ad)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Ad)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Adres)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Adres)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CalismaSaatleri)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CalismaSaatleri)
-        </dd>
-    </dl>
+<style>
+    /* Sayfa Özel Stilleri */
+    .detail-header-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .salon-image {
+        height: 350px;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .info-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        height: 100%;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #6c757d; /* Yumuşak gri */
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #343a40; /* Koyu gri, tam siyah değil */
+        font-weight: 500;
+    }
+
+    .info-icon {
+        color: #0d6efd; /* Primary mavi */
+        font-size: 1.3rem;
+        margin-right: 10px;
+    }
+
+    #mini-map {
+        height: 300px;
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    .trainer-badge {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        border-radius: 20px;
+        background-color: #e9ecef;
+        color: #495057;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        display: inline-block;
+    }
+</style>
+
+<div class="container mt-4 mb-5">
+    <div class="card detail-header-card mb-4">
+        <div class="row g-0">
+            <div class="col-md-5 position-relative">
+                <img src="@resimUrl" alt="@Model.Ad" class="salon-image">
+                <div class="position-absolute top-0 start-0 m-3">
+                    <span class="badge bg-primary fs-6">@Model.Sehir</span>
+                </div>
+            </div>
+            <div class="col-md-7 d-flex align-items-center bg-white p-4">
+                <div>
+                    <h1 class="display-5 fw-bold text-dark mb-3">@Model.Ad</h1>
+                    <p class="lead text-muted mb-4">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> @Model.Adres
+                    </p>
+                    <div class="d-flex gap-3">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-lg px-4">
+                                <i class="bi bi-pencil-square"></i> Düzenle
+                            </a>
+                        }
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">
+                            <i class="bi bi-arrow-left"></i> Listeye Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card info-card p-4">
+                <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-info-circle-fill"></i> Salon Bilgileri</h4>
+
+                <div class="mb-4 d-flex align-items-center">
+                    <i class="bi bi-telephone-fill info-icon"></i>
+                    <div>
+                        <div class="info-label">Telefon</div>
+                        <div class="info-value">@Model.Telefon</div>
+                    </div>
+                </div>
+
+                <div class="mb-4 d-flex align-items-center">
+                    <i class="bi bi-people-fill info-icon" style="color: #198754;"></i>
+                    <div>
+                        <div class="info-label">Kapasite</div>
+                        <div class="info-value">@Model.Kapasite Kişi</div>
+                    </div>
+                </div>
+
+                <div class="mb-4 d-flex align-items-center">
+                    <i class="bi bi-clock-fill info-icon" style="color: #fd7e14;"></i>
+                    <div>
+                        <div class="info-label">Çalışma Saatleri</div>
+                        <div class="info-value">
+                            <span class="badge bg-light text-dark border border-secondary fs-6">
+                                @Model.AcilisSaati.ToString(@"hh\:mm") - @Model.KapanisSaati.ToString(@"hh\:mm")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <h5 class="fw-bold mt-4 mb-3 text-secondary"><i class="bi bi-person-badge-fill"></i> Antrenör kadrosu</h5>
+                @if (Model.Antrenorler != null && Model.Antrenorler.Any())
+                {
+                    <div class="d-flex flex-wrap">
+                        @foreach (var antrenor in Model.Antrenorler)
+                        {
+                            <a asp-controller="Antrenors" asp-action="Details" asp-route-id="@antrenor.AntrenorId" class="text-decoration-none">
+                                <span class="trainer-badge shadow-sm">
+                                    <i class="bi bi-person-fill"></i> @antrenor.AdSoyad
+                                    <small class="text-muted">(@antrenor.UzmanlikAlani)</small>
+                                </span>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted fst-italic"><i class="bi bi-exclamation-circle"></i> Bu salona henüz antrenör atanmamış.</p>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card info-card p-4">
+                <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-map-fill"></i> Konum</h4>
+                @if (koordinatVar)
+                {
+                    <div id="mini-map" class="shadow-sm"></div>
+                    <small class="text-muted mt-2 d-block text-center">
+                        <i class="bi bi-pin-map-fill text-danger"></i> @Model.Adres
+                    </small>
+                }
+                else
+                {
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                        <div>
+                            <strong>Konum Bulunamadı!</strong>
+                            <p class="mb-0">Bu salon için harita koordinatları henüz girilmemiş.</p>
+                        </div>
+                    </div>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-warning mt-2 w-100">
+                            Koordinat Ekle
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.SporSalonuId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Sadece koordinat varsa haritayı çalıştır
+    @if (koordinatVar)
+    {
+            <text>
+            var mapLat = @enlem;
+            var mapLng = @boylam;
+
+            var miniMap = L.map('mini-map', {
+                center: [mapLat, mapLng],
+                zoom: 15,
+                zoomControl: false, // Daha temiz görünüm için butonları gizle
+                dragging: false,    // Mini harita olduğu için kaydırmayı kapat
+                scrollWheelZoom: false // Mouse ile zoom yapmayı kapat
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(miniMap);
+
+            L.marker([mapLat, mapLng]).addTo(miniMap)
+                .bindPopup("<b>@Model.Ad</b><br>Buradasınız.")
+                .openPopup();
+            </text>
+    }
+</script>

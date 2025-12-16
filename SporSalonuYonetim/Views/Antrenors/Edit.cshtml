@@ -13,16 +13,23 @@
                 <div class="card-body">
                     <form asp-action="Edit">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
                         <input type="hidden" asp-for="AntrenorId" />
 
                         <div class="form-group mb-3">
                             <label asp-for="AdSoyad" class="control-label fw-bold"></label>
                             <input asp-for="AdSoyad" class="form-control" />
                             <span asp-validation-for="AdSoyad" class="text-danger"></span>
-                            <small class="text-muted">Sadece harf kullanınız.</small>
                         </div>
 
+                        <div class="form-group mb-3">
+                            <label asp-for="Cinsiyet" class="control-label fw-bold"></label>
+                            <select asp-for="Cinsiyet" class="form-select">
+                                <option value="">-- Cinsiyet Seçiniz --</option>
+                                <option value="Erkek">Erkek</option>
+                                <option value="Kadın">Kadın</option>
+                            </select>
+                            <span asp-validation-for="Cinsiyet" class="text-danger"></span>
+                        </div>
                         <div class="form-group mb-3">
                             <label asp-for="UzmanlikAlani" class="control-label fw-bold"></label>
                             <select asp-for="UzmanlikAlani" class="form-select">
@@ -39,6 +46,11 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label class="control-label fw-bold">Çalıştığı Salon</label>
+                            <select asp-for="SporSalonuId" class="form-control" asp-items="ViewBag.SporSalonuId"></select>
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label asp-for="CalismaBaslangic" class="control-label fw-bold"></label>
                             <input asp-for="CalismaBaslangic" type="time" class="form-control" />
                             <span asp-validation-for="CalismaBaslangic" class="text-danger"></span>
@@ -48,6 +60,12 @@
                             <label asp-for="CalismaBitis" class="control-label fw-bold"></label>
                             <input asp-for="CalismaBitis" type="time" class="form-control" />
                             <span asp-validation-for="CalismaBitis" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ResimUrl" class="control-label fw-bold"></label>
+                            <input asp-for="ResimUrl" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="ResimUrl" class="text-danger"></span>
                         </div>
 
                         <div class="form-group d-grid gap-2 mt-4">

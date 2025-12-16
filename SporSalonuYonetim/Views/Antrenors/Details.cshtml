@@ -1,42 +1,57 @@
 ﻿@model SporSalonuYonetim.Models.Antrenor
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Antrenör Detayı";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Antrenor</h4>
+<div class="container mt-4">
+    <h1>Antrenör Detayı</h1>
     <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AdSoyad)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AdSoyad)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UzmanlikAlani)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UzmanlikAlani)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CalismaBaslangic)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CalismaBaslangic)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CalismaBitis)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CalismaBitis)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AntrenorId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3 fw-bold">
+                    @Html.DisplayNameFor(model => model.AdSoyad)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.AdSoyad)
+                </dd>
+
+                <dt class="col-sm-3 fw-bold">
+                    @Html.DisplayNameFor(model => model.UzmanlikAlani)
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.UzmanlikAlani)
+                </dd>
+
+                <dt class="col-sm-3 fw-bold">
+                    Çalıştığı Salon
+                </dt>
+                <dd class="col-sm-9">
+                    @if (Model.SporSalonu != null)
+                    {
+                        <span class="badge bg-info text-dark" style="font-size: 1em;">
+                            @Model.SporSalonu.Ad
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Herhangi bir salona atanmamış</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 fw-bold">
+                    Mesai Saatleri
+                </dt>
+                <dd class="col-sm-9">
+                    @Model.CalismaBaslangic.ToString(@"hh\:mm") - @Model.CalismaBitis.ToString(@"hh\:mm")
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer bg-light">
+            <a asp-action="Edit" asp-route-id="@Model?.AntrenorId" class="btn btn-warning">Düzenle</a> |
+            <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+        </div>
+    </div>
 </div>

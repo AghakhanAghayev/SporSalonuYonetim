@@ -1,143 +1,78 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using SporSalonuYonetim.Data;
-using SporSalonuYonetim.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿@model SporSalonuYonetim.Models.Hizmet
 
-namespace SporSalonuYonetim.Controllers
-{
-    // KURAL 1: Sayfaları görmek için giriş yapmış olmak şart
-    [Authorize]
-    public class HizmetsController : Controller
-    {
-        private readonly ApplicationDbContext _context;
+@{
+    ViewData["Title"] = "Hizmeti Düzenle";
+}
 
-        public HizmetsController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-pencil-square"></i> Hizmeti Düzenle</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        // GET: Hizmets (Herkes görebilir)
-        public async Task<IActionResult> Index()
-        {
-            return View(await _context.Hizmetler.ToListAsync());
-        }
+                        <input type="hidden" asp-for="HizmetId" />
 
-        // GET: Hizmets/Details/5 (Herkes görebilir)
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
+                        <div class="mb-3">
+                            <label asp-for="Ad" class="form-label fw-bold"></label>
+                            <input asp-for="Ad" class="form-control" placeholder="Örn: Fitness" />
+                            <span asp-validation-for="Ad" class="text-danger"></span>
+                        </div>
 
-            var hizmet = await _context.Hizmetler
-                .FirstOrDefaultAsync(m => m.HizmetId == id);
-            
-            if (hizmet == null) return NotFound();
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Ucret" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₺</span>
+                                    <input asp-for="Ucret" class="form-control" type="number" step="0.01" />
+                                </div>
+                                <span asp-validation-for="Ucret" class="text-danger"></span>
+                            </div>
 
-            return View(hizmet);
-        }
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SureDakika" class="form-label fw-bold"></label>
+                                <div class="input-group">
+                                    <input asp-for="SureDakika" class="form-control" type="number" />
+                                    <span class="input-group-text">Dakika</span>
+                                </div>
+                                <span asp-validation-for="SureDakika" class="text-danger"></span>
+                            </div>
+                        </div>
 
-        // -----------------------------------------------------------
-        // YÖNETİM İŞLEMLERİ (SADECE ADMIN)
-        // -----------------------------------------------------------
+                        <div class="mb-3">
+                            <label asp-for="Aciklama" class="form-label fw-bold"></label>
+                            <textarea asp-for="Aciklama" class="form-control" rows="3" placeholder="Hizmet hakkında detaylı bilgi..."></textarea>
+                            <span asp-validation-for="Aciklama" class="text-danger"></span>
+                        </div>
 
-        // GET: Hizmets/Create
-        [Authorize(Roles = "Admin")]
-        public IActionResult Create()
-        {
-            return View();
-        }
+                        <div class="mb-4">
+                            <label asp-for="ResimUrl" class="form-label fw-bold"></label>
+                            <input asp-for="ResimUrl" class="form-control" placeholder="https://..." id="resimInput" />
+                            <span asp-validation-for="ResimUrl" class="text-danger"></span>
+                            <small class="text-muted">Resim bağlantısını buraya yapıştırın.</small>
+                        </div>
 
-        // POST: Hizmets/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        // DÜZELTME BURADA YAPILDI: "Sure" yerine "SureDakika" yazıldı
-        public async Task<IActionResult> Create([Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(hizmet);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(hizmet);
-        }
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg text-dark fw-bold">
+                                <i class="bi bi-check-circle-fill"></i> Değişiklikleri Kaydet
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                Listeye Dön
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // GET: Hizmets/Edit/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var hizmet = await _context.Hizmetler.FindAsync(id);
-            if (hizmet == null) return NotFound();
-            return View(hizmet);
-        }
-
-        // POST: Hizmets/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        // DÜZELTME BURADA YAPILDI: "Sure" yerine "SureDakika" yazıldı
-        public async Task<IActionResult> Edit(int id, [Bind("HizmetId,Ad,Aciklama,Ucret,SureDakika")] Hizmet hizmet)
-        {
-            if (id != hizmet.HizmetId) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(hizmet);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!HizmetExists(hizmet.HizmetId)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(hizmet);
-        }
-
-        // GET: Hizmets/Delete/5
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var hizmet = await _context.Hizmetler
-                .FirstOrDefaultAsync(m => m.HizmetId == id);
-            
-            if (hizmet == null) return NotFound();
-
-            return View(hizmet);
-        }
-
-        // POST: Hizmets/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var hizmet = await _context.Hizmetler.FindAsync(id);
-            if (hizmet != null)
-            {
-                _context.Hizmetler.Remove(hizmet);
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool HizmetExists(int id)
-        {
-            return _context.Hizmetler.Any(e => e.HizmetId == id);
-        }
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }

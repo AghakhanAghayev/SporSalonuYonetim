@@ -9,18 +9,18 @@ using SporSalonuYonetim.Data;
 
 #nullable disable
 
-namespace SporSalonuYonetim.Data.Migrations
+namespace SporSalonuYonetim.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251208012440_HizmetSureGuncellemesi")]
-    partial class HizmetSureGuncellemesi
+    [Migration("20251215225634_IlkKurulum")]
+    partial class IlkKurulum
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -329,11 +329,11 @@ namespace SporSalonuYonetim.Data.Migrations
 
             modelBuilder.Entity("SporSalonuYonetim.Models.SporSalonu", b =>
                 {
-                    b.Property<int>("SporSalonuId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SporSalonuId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Ad")
                         .IsRequired()
@@ -343,11 +343,22 @@ namespace SporSalonuYonetim.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CalismaSaatleri")
+                    b.Property<int>("Kapasite")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResimUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("SporSalonuId");
+                    b.Property<string>("Sehir")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Telefon")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
 
                     b.ToTable("SporSalonlari");
                 });

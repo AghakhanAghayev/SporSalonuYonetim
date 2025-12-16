@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SporSalonuYonetim.Controllers
 {
-    // KURAL 1: İçeri girmek için Üye veya Admin olmak yeterli (Admin zorunluluğunu buradan kaldırdık)
     [Authorize]
     public class AntrenorsController : Controller
     {
@@ -22,14 +21,11 @@ namespace SporSalonuYonetim.Controllers
             _context = context;
         }
 
-        // ---------------------------------------------------------------
-        // OKUMA İŞLEMLERİ (HERKES GÖREBİLİR)
-        // ---------------------------------------------------------------
-
         // GET: Antrenors
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Antrenorler.ToListAsync());
+            var antrenorler = _context.Antrenorler.Include(a => a.SporSalonu);
+            return View(await antrenorler.ToListAsync());
         }
 
         // GET: Antrenors/Details/5
@@ -38,6 +34,7 @@ namespace SporSalonuYonetim.Controllers
             if (id == null) return NotFound();
 
             var antrenor = await _context.Antrenorler
+                .Include(a => a.SporSalonu)
                 .FirstOrDefaultAsync(m => m.AntrenorId == id);
 
             if (antrenor == null) return NotFound();
@@ -45,35 +42,27 @@ namespace SporSalonuYonetim.Controllers
             return View(antrenor);
         }
 
-        // ---------------------------------------------------------------
-        // YÖNETİM İŞLEMLERİ (SADECE ADMIN YAPABİLİR)
-        // ---------------------------------------------------------------
-
         // GET: Antrenors/Create
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            // Hizmet listesini veritabanından çekiyoruz
-            var hizmetIsimleri = _context.Hizmetler
-                                         .Select(h => h.Ad)
-                                         .Distinct()
-                                         .ToList();
-
-            if (hizmetIsimleri.Count == 0)
-            {
-                hizmetIsimleri.Add("Lütfen Önce Hizmet Ekleyiniz");
-            }
-
+            var hizmetIsimleri = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
+            if (hizmetIsimleri.Count == 0) hizmetIsimleri.Add("Lütfen Önce Hizmet Ekleyiniz");
             ViewBag.Uzmanliklar = hizmetIsimleri;
+            ViewData["SporSalonuId"] = new SelectList(_context.SporSalonlari, "Id", "Ad");
+
             return View();
         }
 
         // POST: Antrenors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
-        public async Task<IActionResult> Create([Bind("AntrenorId,AdSoyad,UzmanlikAlani,CalismaBaslangic,CalismaBitis")] Antrenor antrenor)
+        [Authorize(Roles = "Admin")]
+        // DÜZELTME: "Cinsiyet" eklendi
+        public async Task<IActionResult> Create([Bind("AntrenorId,AdSoyad,Cinsiyet,UzmanlikAlani,CalismaBaslangic,CalismaBitis,SporSalonuId,ResimUrl")] Antrenor antrenor)
         {
+            ModelState.Remove("SporSalonu");
+
             if (ModelState.IsValid)
             {
                 _context.Add(antrenor);
@@ -81,12 +70,14 @@ namespace SporSalonuYonetim.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
+            var hizmetIsimleri = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
+            ViewBag.Uzmanliklar = hizmetIsimleri;
+            ViewData["SporSalonuId"] = new SelectList(_context.SporSalonlari, "Id", "Ad", antrenor.SporSalonuId);
             return View(antrenor);
         }
 
         // GET: Antrenors/Edit/5
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -95,17 +86,20 @@ namespace SporSalonuYonetim.Controllers
             if (antrenor == null) return NotFound();
 
             ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
-
+            ViewData["SporSalonuId"] = new SelectList(_context.SporSalonlari, "Id", "Ad", antrenor.SporSalonuId);
             return View(antrenor);
         }
 
         // POST: Antrenors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
-        public async Task<IActionResult> Edit(int id, [Bind("AntrenorId,AdSoyad,UzmanlikAlani,CalismaBaslangic,CalismaBitis")] Antrenor antrenor)
+        [Authorize(Roles = "Admin")]
+        // DÜZELTME: "Cinsiyet" eklendi
+        public async Task<IActionResult> Edit(int id, [Bind("AntrenorId,AdSoyad,Cinsiyet,UzmanlikAlani,CalismaBaslangic,CalismaBitis,SporSalonuId,ResimUrl")] Antrenor antrenor)
         {
             if (id != antrenor.AntrenorId) return NotFound();
+
+            ModelState.Remove("SporSalonu");
 
             if (ModelState.IsValid)
             {
@@ -123,16 +117,18 @@ namespace SporSalonuYonetim.Controllers
             }
 
             ViewBag.Uzmanliklar = _context.Hizmetler.Select(h => h.Ad).Distinct().ToList();
+            ViewData["SporSalonuId"] = new SelectList(_context.SporSalonlari, "Id", "Ad", antrenor.SporSalonuId);
             return View(antrenor);
         }
 
         // GET: Antrenors/Delete/5
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
             var antrenor = await _context.Antrenorler
+                .Include(a => a.SporSalonu)
                 .FirstOrDefaultAsync(m => m.AntrenorId == id);
 
             if (antrenor == null) return NotFound();
@@ -143,15 +139,11 @@ namespace SporSalonuYonetim.Controllers
         // POST: Antrenors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // KİLİT: Sadece Admin
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var antrenor = await _context.Antrenorler.FindAsync(id);
-            if (antrenor != null)
-            {
-                _context.Antrenorler.Remove(antrenor);
-            }
-
+            if (antrenor != null) _context.Antrenorler.Remove(antrenor);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

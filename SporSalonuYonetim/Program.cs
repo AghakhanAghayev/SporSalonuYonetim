@@ -62,7 +62,9 @@ builder.Services.AddMiniProfiler(options =>
 }).AddEntityFramework();
 
 var app = builder.Build();
-
+var cultureInfo = new System.Globalization.CultureInfo("tr-TR");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // 6. Otomatik Admin Oluşturma (Seeding)
 using (var scope = app.Services.CreateScope())
 {

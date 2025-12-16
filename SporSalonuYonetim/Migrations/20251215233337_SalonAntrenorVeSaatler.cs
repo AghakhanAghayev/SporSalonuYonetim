@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace SporSalonuYonetim.Data.Migrations
+namespace SporSalonuYonetim.Migrations
 {
     /// <inheritdoc />
-    public partial class AntrenorGuncelleme : Migration
+    public partial class SalonAntrenorVeSaatler : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

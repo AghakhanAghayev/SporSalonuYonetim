@@ -27,6 +27,19 @@
                     <span asp-validation-for="Ucret" class="text-danger"></span>
                 </div>
 
+                <div class="mb-3">
+                    <label asp-for="Aciklama" class="form-label fw-bold"></label>
+                    <textarea asp-for="Aciklama" class="form-control" rows="2" placeholder="Hizmet hakkında kısa bilgi..."></textarea>
+                    <span asp-validation-for="Aciklama" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ResimUrl" class="form-label fw-bold"></label>
+                    <input asp-for="ResimUrl" class="form-control" placeholder="https://ornek.com/resim.jpg" />
+                    <span asp-validation-for="ResimUrl" class="text-danger"></span>
+                    <small class="text-muted">Unsplash veya Google'dan bir resim bağlantısı yapıştırın.</small>
+                </div>
+
                 <div class="form-group mb-3">
                     <label asp-for="SureDakika" class="control-label fw-bold"></label>
                     <div class="input-group">

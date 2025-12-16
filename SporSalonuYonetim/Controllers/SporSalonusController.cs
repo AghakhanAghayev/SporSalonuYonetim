@@ -28,17 +28,11 @@ namespace SporSalonuYonetim.Controllers
         // GET: SporSalonus/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var sporSalonu = await _context.SporSalonlari
-                .FirstOrDefaultAsync(m => m.SporSalonuId == id);
-            if (sporSalonu == null)
-            {
-                return NotFound();
-            }
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (sporSalonu == null) return NotFound();
 
             return View(sporSalonu);
         }
@@ -50,11 +44,10 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // POST: SporSalonus/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SporSalonuId,Ad,Adres,CalismaSaatleri")] SporSalonu sporSalonu)
+        // GÜNCELLEME: Harita için "Enlem" ve "Boylam" alanları eklendi
+        public async Task<IActionResult> Create([Bind("Id,Ad,Sehir,Adres,Telefon,Kapasite,ResimUrl,AcilisSaati,KapanisSaati,Enlem,Boylam")] SporSalonu sporSalonu)
         {
             if (ModelState.IsValid)
             {
@@ -68,30 +61,20 @@ namespace SporSalonuYonetim.Controllers
         // GET: SporSalonus/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var sporSalonu = await _context.SporSalonlari.FindAsync(id);
-            if (sporSalonu == null)
-            {
-                return NotFound();
-            }
+            if (sporSalonu == null) return NotFound();
             return View(sporSalonu);
         }
 
         // POST: SporSalonus/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("SporSalonuId,Ad,Adres,CalismaSaatleri")] SporSalonu sporSalonu)
+        // GÜNCELLEME: Harita için "Enlem" ve "Boylam" alanları eklendi
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Ad,Sehir,Adres,Telefon,Kapasite,ResimUrl,AcilisSaati,KapanisSaati,Enlem,Boylam")] SporSalonu sporSalonu)
         {
-            if (id != sporSalonu.SporSalonuId)
-            {
-                return NotFound();
-            }
+            if (id != sporSalonu.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -102,14 +85,8 @@ namespace SporSalonuYonetim.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SporSalonuExists(sporSalonu.SporSalonuId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!SporSalonuExists(sporSalonu.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -119,17 +96,11 @@ namespace SporSalonuYonetim.Controllers
         // GET: SporSalonus/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var sporSalonu = await _context.SporSalonlari
-                .FirstOrDefaultAsync(m => m.SporSalonuId == id);
-            if (sporSalonu == null)
-            {
-                return NotFound();
-            }
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (sporSalonu == null) return NotFound();
 
             return View(sporSalonu);
         }
@@ -151,7 +122,7 @@ namespace SporSalonuYonetim.Controllers
 
         private bool SporSalonuExists(int id)
         {
-            return _context.SporSalonlari.Any(e => e.SporSalonuId == id);
+            return _context.SporSalonlari.Any(e => e.Id == id);
         }
     }
 }

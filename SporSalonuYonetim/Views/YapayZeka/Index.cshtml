@@ -1,35 +1,108 @@
 ﻿@{
     ViewData["Title"] = "AI Antrenör";
+    var gecmisListesi = ViewBag.GecmisListesi as IEnumerable<SporSalonuYonetim.Models.AiAnalizGecmisi>;
+
+    bool gecmisVarMi = gecmisListesi != null && gecmisListesi.Any();
+    bool yeniCevapVarMi = ViewBag.Cevap != null;
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg mb-4">
+<style>
+    /* --- MEVCUT STİLLERİN --- */
+    .nav-tabs .nav-link {
+        color: #495057;
+        font-weight: 600;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        border-radius: 8px 8px 0 0;
+        margin-right: 4px;
+    }
+
+        .nav-tabs .nav-link.active {
+            color: #0d6efd !important;
+            background-color: #fff !important;
+            border-bottom-color: transparent;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
+        }
+
+    .custom-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden; /* Köşelerden taşmayı engelle */
+    }
+
+    /* --- YENİ EKLENEN: AI RESİM VE ETİKET TASARIMI --- */
+    .ai-image-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .ai-caption {
+        background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); /* Siyahtan şeffafa geçiş */
+        color: #fff;
+        padding: 30px 20px 15px 20px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .ai-badge {
+        background-color: #0d6efd; /* Bootstrap Primary Blue */
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        margin-right: 8px;
+        font-weight: 700;
+        vertical-align: middle;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Cevap Kutusu */
+    .ai-response-box {
+        background-color: #fff;
+        border-left: 5px solid #0d6efd;
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card custom-card mb-4">
                 <div class="card-header bg-primary text-white py-3">
-                    <h5 class="m-0 fw-bold"><i class="bi bi-robot"></i> Yapay Zeka Antrenör</h5>
+                    <h5 class="m-0 fw-bold"><i class="bi bi-robot me-2"></i>Yeni Analiz Başlat</h5>
                 </div>
                 <div class="card-body p-4">
-                    <p class="text-muted small mb-4">Vücut ölçülerini gir, hedefini menüden seç ve programını al.</p>
-
                     <form asp-controller="YapayZeka" asp-action="Danis" method="post">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Yaş</label>
+                                <label class="form-label fw-bold small">Yaş</label>
                                 <input type="number" name="yas" class="form-control" value="@ViewBag.EskiYas" required placeholder="25">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Boy (cm)</label>
+                                <label class="form-label fw-bold small">Boy</label>
                                 <input type="number" name="boy" class="form-control" value="@ViewBag.EskiBoy" required placeholder="180">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Kilo (kg)</label>
+                                <label class="form-label fw-bold small">Kilo</label>
                                 <input type="number" name="kilo" class="form-control" value="@ViewBag.EskiKilo" required placeholder="80">
                             </div>
                         </div>
 
                         <div class="mt-3">
-                            <label class="form-label fw-bold">Cinsiyet</label>
+                            <label class="form-label fw-bold small">Cinsiyet</label>
                             <select name="cinsiyet" class="form-select">
                                 <option value="Erkek">Erkek</option>
                                 <option value="Kadın">Kadın</option>
@@ -37,7 +110,7 @@
                         </div>
 
                         <div class="mt-3">
-                            <label class="form-label fw-bold">Hedefin Nedir?</label>
+                            <label class="form-label fw-bold small">Hedef</label>
                             <select name="hedef" class="form-select">
                                 <option value="Kilo Vermek (Yağ Yakımı)">Kilo Vermek (Yağ Yakımı)</option>
                                 <option value="Kas Yapmak (Hipertrofi)">Kas Yapmak (Hipertrofi)</option>
@@ -48,57 +121,166 @@
                             </select>
                         </div>
 
-                        <div class="form-check form-switch mt-3">
-                            <input class="form-check-input" type="checkbox" id="gorselIste" name="gorselIste" value="true" checked>
-                            <label class="form-check-label" for="gorselIste">Hedef Vücut Görseli de Oluştur</label>
+                        <div class="form-check form-switch mt-3 p-3 bg-light rounded">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" id="gorselIste" name="gorselIste" value="true" checked>
+                            <label class="form-check-label small fw-bold" for="gorselIste">Hedef Vücut Görseli Oluştur</label>
                         </div>
 
                         <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg hover-scale">
-                                <i class="bi bi-magic"></i> Programı Hazırla
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                <i class="bi bi-magic me-2"></i> Analiz Et
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-7">
-            @if (ViewBag.Cevap != null)
+            @if (gecmisVarMi)
             {
-                <div class="card shadow-lg border-0">
-                    <div class="card-body">
-                        <h4 class="card-title text-success mb-3"><i class="bi bi-check-circle-fill"></i> Senin İçin Hazırlanan Program</h4>
-
-                        @if (ViewBag.ResimUrl != null)
-                        {
-                            <div class="card mb-4 border-0 shadow-sm overflow-hidden">
-                                <div class="row g-0">
-                                    <div class="col-md-12 position-relative">
-                                        <div class="bg-light d-flex justify-content-center align-items-center" style="min-height: 300px;">
-                                            <img src="@ViewBag.ResimUrl" class="img-fluid w-100 rounded" alt="Hedef Vücut" style="object-fit: cover; max-height: 500px;" loading="lazy">
-                                        </div>
-                                        <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-75 text-white p-2 text-center small">
-                                            <i class="bi bi-robot"></i> Yapay Zeka Tarafından Oluşturulan Hedef Görünüm
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <div class="ai-response-box">
-                            @Html.Raw(ViewBag.Cevap.Replace("\n", "<br>"))
-                        </div>
+                <div class="card custom-card bg-light border-danger">
+                    <div class="card-body p-3">
+                        <form asp-action="GecmisiTemizle" method="post" onsubmit="return confirm('Tüm analiz geçmişin silinecek. Emin misiniz?');" class="d-grid">
+                            <button class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash me-2"></i> Geçmişi Temizle
+                            </button>
+                        </form>
                     </div>
                 </div>
             }
-            else
-            {
-                <div class="text-center text-muted py-5">
-                    <i class="bi bi-activity fs-1 d-block mb-3"></i>
-                    <p>Henüz bir program oluşturmadın. Sol taraftan bilgilerini girip butona bas!</p>
+        </div>
+
+        <div class="col-md-8">
+            <ul class="nav nav-tabs mb-3 border-bottom-0" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active py-3 px-4" id="sonuc-tab" data-bs-toggle="tab" data-bs-target="#sonuc" type="button">
+                        <i class="bi bi-stars text-warning me-2"></i> Yeni Sonuç
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 px-4" id="gecmis-tab" data-bs-toggle="tab" data-bs-target="#gecmis" type="button">
+                        <i class="bi bi-clock-history me-2"></i> Geçmiş Analizler
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="sonuc" role="tabpanel">
+                    @if (yeniCevapVarMi)
+                    {
+                        <div class="card custom-card">
+                            <div class="card-body p-4">
+                                <h4 class="card-title text-success mb-4 fw-bold">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Senin İçin Hazırlanan Program
+                                </h4>
+
+                                @if (ViewBag.ResimUrl != null)
+                                {
+                                    <div class="ai-image-wrapper mb-4">
+                                        <img src="@ViewBag.ResimUrl" class="img-fluid w-100" alt="Hedef Vücut Simülasyonu" style="object-fit: cover;">
+
+                                        <div class="ai-caption">
+                                            <span class="ai-badge"><i class="bi bi-cpu me-1"></i> AI ANALİZİ</span>
+                                            Fiziksel verilerine göre 12 ay sonraki potansiyel hedefin.
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="ai-response-box p-4 shadow-sm rounded">
+                                    @Html.Raw(ViewBag.Cevap.Replace("\n", "<br>"))
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card custom-card text-center py-5">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <i class="bi bi-activity text-muted" style="font-size: 4rem;"></i>
+                                </div>
+                                <h4 class="text-muted fw-bold">Henüz Analiz Yapılmadı</h4>
+                                <p class="text-secondary w-75 mx-auto">Sol taraftaki panelden vücut bilgilerini ve hedefini seç, yapay zeka senin için en uygun programı ve hedef vücut görselini hazırlasın.</p>
+                            </div>
+                        </div>
+                    }
                 </div>
-            }
+
+                <div class="tab-pane fade" id="gecmis" role="tabpanel">
+                    @if (gecmisVarMi)
+                    {
+                        <div class="accordion" id="accordionGecmis">
+                            @foreach (var item in gecmisListesi)
+                            {
+                                <div class="accordion-item mb-3 border-0 shadow-sm rounded overflow-hidden">
+                                    <h2 class="accordion-header" id="heading-@item.Id">
+                                        <button class="accordion-button collapsed bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@item.Id">
+                                            <div class="d-flex align-items-center w-100 justify-content-between pe-3">
+                                                <div>
+                                                    <i class="bi bi-calendar-check text-primary me-2"></i>
+                                                    <strong>@item.Tarih.ToString("dd MMMM yyyy HH:mm")</strong>
+                                                </div>
+                                                <small class="text-muted fst-italic">@item.KullaniciSorusu</small>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-@item.Id" class="accordion-collapse collapse" data-bs-parent="#accordionGecmis">
+                                        <div class="accordion-body bg-light">
+                                            @if (!string.IsNullOrEmpty(item.ResimUrl))
+                                            {
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6 offset-md-3">
+                                                        <div class="ai-image-wrapper">
+                                                            <img src="@item.ResimUrl" class="img-fluid" alt="Geçmiş Analiz Resmi" />
+                                                            <div class="ai-caption py-2">
+                                                                <small>Geçmiş Analiz Görseli</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            <div class="p-3 bg-white rounded border border-light">
+                                                @Html.Raw(item.AiCevabi.Replace("\n", "<br>"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light text-center border shadow-sm p-4">
+                            <i class="bi bi-folder-x fs-1 text-muted d-block mb-2"></i>
+                            Henüz geçmiş bir analiz kaydı bulunmuyor.
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Sayfa yüklendiğinde hangi sekmenin açılacağını belirleyen mantık
+    var yeniCevapGeldi = @(yeniCevapVarMi.ToString().ToLower());
+    var gecmisVar = @(gecmisVarMi.ToString().ToLower());
+
+    // Bootstrap 5 Tab Mantığı
+    document.addEventListener("DOMContentLoaded", function() {
+        if (yeniCevapGeldi) {
+            var tabEl = document.querySelector('#sonuc-tab');
+            var tab = new bootstrap.Tab(tabEl);
+            tab.show();
+        }
+        else if (gecmisVar) {
+            // Eğer yeni cevap yoksa ama geçmiş varsa, geçmiş sekmesini açabiliriz (isteğe bağlı)
+            // Varsayılan olarak "Yeni Sonuç" boş ekranını göstermek daha mantıklı olabilir,
+            // ama geçmişi açmak istersen aşağıdaki satırları aktif et:
+
+            // var tabEl = document.querySelector('#gecmis-tab');
+            // var tab = new bootstrap.Tab(tabEl);
+            // tab.show();
+        }
+    });
+</script>

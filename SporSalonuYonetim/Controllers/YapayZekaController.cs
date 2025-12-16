@@ -2,7 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
-using System.Web; // URL Encode için gerekli
+using System.Web;
+using SporSalonuYonetim.Data;
+using SporSalonuYonetim.Models;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace SporSalonuYonetim.Controllers
 {
@@ -11,17 +15,27 @@ namespace SporSalonuYonetim.Controllers
     {
         private readonly string _apiKey;
         private readonly HttpClient _httpClient;
+        private readonly ApplicationDbContext _context; // Veritabanı bağlantısı eklendi
 
-        public YapayZekaController(IConfiguration configuration)
+        public YapayZekaController(IConfiguration configuration, ApplicationDbContext context)
         {
             _apiKey = configuration["GeminiApiKey"];
             _httpClient = new HttpClient();
             _httpClient.Timeout = TimeSpan.FromMinutes(5);
+            _context = context;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            // Sayfa açılınca geçmiş kayıtları getir
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var gecmis = await _context.AiAnalizGecmisleri
+                .Where(x => x.UyeId == userId)
+                .OrderByDescending(x => x.Tarih)
+                .ToListAsync();
+
+            ViewBag.GecmisListesi = gecmis;
             return View();
         }
 
@@ -40,11 +54,9 @@ namespace SporSalonuYonetim.Controllers
                 {
                     promptBuilder.AppendLine("\n--- ÖZEL İSTEK ---");
                     promptBuilder.AppendLine("Cevabının EN SONUNA, '###RESIM_KODU:' diye bir başlık aç.");
-                    // 🔥 GERÇEKÇİ GÖRSEL AYARI 🔥
                     promptBuilder.AppendLine("Bu başlığın yanına, bu kişinin hedefine ulaştığındaki halini tarif eden İNGİLİZCE bir cümle yaz.");
                     promptBuilder.AppendLine("Lütfen 'photorealistic, real photo, 4k, highly detailed, gym environment' kelimelerini MUTLAKA kullan.");
-                    promptBuilder.AppendLine("Asla çizim veya karikatür (illustration, cartoon) olmasın.");
-                    promptBuilder.AppendLine("Örnek format: ###RESIM_KODU: realistic photo of a fit man in gym, 4k, highly detailed");
+                    promptBuilder.AppendLine("Asla çizim veya karikatür olmasın.");
                 }
 
                 var modelId = "gemini-2.5-flash";
@@ -59,6 +71,9 @@ namespace SporSalonuYonetim.Controllers
                 var response = await _httpClient.PostAsync(url, jsonContent);
                 var responseString = await response.Content.ReadAsStringAsync();
 
+                string finalCevap = "Yanıt alınamadı.";
+                string finalResimUrl = null;
+
                 if (response.IsSuccessStatusCode)
                 {
                     using (JsonDocument doc = JsonDocument.Parse(responseString))
@@ -68,34 +83,41 @@ namespace SporSalonuYonetim.Controllers
                             var textPart = candidates[0].GetProperty("content").GetProperty("parts")[0];
                             string fullText = textPart.GetProperty("text").GetString();
 
-                            // 2. Cevabı Parçalama
                             if (fullText.Contains("###RESIM_KODU:"))
                             {
                                 var parts = fullText.Split(new string[] { "###RESIM_KODU:" }, StringSplitOptions.RemoveEmptyEntries);
-                                ViewBag.Cevap = parts[0].Trim();
+                                finalCevap = parts[0].Trim();
 
                                 if (parts.Length > 1)
                                 {
-                                    // URL İçin Temizleme (Boşlukları %20 yapma vb.)
                                     string rawPrompt = parts[1].Trim();
-                                    ViewBag.ResimUrl = $"https://image.pollinations.ai/prompt/{HttpUtility.UrlEncode(rawPrompt)}?width=1024&height=1024&nologo=true&seed={new Random().Next(1, 9999)}";
+                                    finalResimUrl = $"https://image.pollinations.ai/prompt/{HttpUtility.UrlEncode(rawPrompt)}?width=1024&height=1024&nologo=true&seed={new Random().Next(1, 9999)}";
                                 }
                             }
                             else
                             {
-                                ViewBag.Cevap = fullText;
+                                finalCevap = fullText;
                             }
-                        }
-                        else
-                        {
-                            ViewBag.Cevap = "Yapay zeka yanıt oluşturamadı.";
+
+                            // --- CRUD: VERİTABANINA KAYDET ---
+                            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                            var yeniKayit = new AiAnalizGecmisi
+                            {
+                                UyeId = userId,
+                                KullaniciSorusu = $"{yas} yaş, {boy}cm, {kilo}kg, {hedef} ({cinsiyet})",
+                                AiCevabi = finalCevap,
+                                ResimUrl = finalResimUrl,
+                                Tarih = DateTime.Now
+                            };
+                            _context.AiAnalizGecmisleri.Add(yeniKayit);
+                            await _context.SaveChangesAsync();
+                            // ---------------------------------
                         }
                     }
                 }
-                else
-                {
-                    ViewBag.Cevap = "Bağlantı hatası oluştu.";
-                }
+
+                ViewBag.Cevap = finalCevap;
+                ViewBag.ResimUrl = finalResimUrl;
             }
             catch (Exception ex)
             {
@@ -105,7 +127,24 @@ namespace SporSalonuYonetim.Controllers
             // Form verilerini koru
             ViewBag.EskiYas = yas; ViewBag.EskiBoy = boy; ViewBag.EskiKilo = kilo; ViewBag.GorselIstendi = gorselIste;
 
+            // Geçmiş listesini tekrar yükle
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewBag.GecmisListesi = await _context.AiAnalizGecmisleri.Where(x => x.UyeId == currentUserId).OrderByDescending(x => x.Tarih).ToListAsync();
+
             return View("Index");
+        }
+
+        // --- CRUD: SİLME İŞLEMİ ---
+        [HttpPost]
+        public async Task<IActionResult> GecmisiTemizle()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var kayitlar = await _context.AiAnalizGecmisleri.Where(x => x.UyeId == userId).ToListAsync();
+
+            _context.AiAnalizGecmisleri.RemoveRange(kayitlar);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
         }
     }
 }
