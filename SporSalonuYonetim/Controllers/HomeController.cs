@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SporSalonuYonetim.Models;
 using System.Diagnostics;
 
@@ -14,6 +14,17 @@ namespace SporSalonuYonetim.Controllers
         }
 
         public IActionResult Index()
+        {
+            return View();
+        }
+
+        // API / LINQ menüsüne tıklandığında hata vermemesi için bu metodun kalması şart.
+        public IActionResult LinqQueries()
+        {
+            return View();
+        }
+
+        public IActionResult About()
         {
             return View();
         }

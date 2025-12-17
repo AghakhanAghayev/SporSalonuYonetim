@@ -5,83 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Spor Salonu Paneli</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.2/pulse/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SporSalonuYonetim.styles.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary border-bottom box-shadow mb-3 py-3">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary border-bottom box-shadow mb-0 py-3">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-activity"></i> GYM PANEL
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index" style="font-size: 1.5rem;">
+                    <i class="fa-solid fa-dumbbell me-2"></i> Fitness Center
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-
+                    <ul class="navbar-nav flex-grow-1 ms-4">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Antrenors" asp-action="Index">
-                                <i class="bi bi-person-badge"></i> Antrenörler
-                            </a>
+                            <a class="nav-link" asp-controller="Antrenors" asp-action="Index"><i class="bi bi-person-badge me-1"></i> Antrenörler</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Hizmets" asp-action="Index">
-                                <i class="bi bi-bookmarks"></i> Hizmetler
-                            </a>
+                            <a class="nav-link" asp-controller="Hizmets" asp-action="Index"><i class="bi bi-bookmarks me-1"></i> Hizmetler</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="SporSalonus" asp-action="Index">
-                                <i class="bi bi-geo-alt"></i> Salonlar
-                            </a>
+                            <a class="nav-link" asp-controller="SporSalonus" asp-action="Index"><i class="bi bi-geo-alt me-1"></i> Salonlar</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Randevus" asp-action="Index">
-                                <i class="bi bi-calendar-check"></i> Randevular
+                            <a class="nav-link" asp-controller="Randevus" asp-action="Index"><i class="bi bi-calendar-check me-1"></i> Randevular</a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="nav-link text-warning fw-bold" asp-controller="YapayZeka" asp-action="Index">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Antrenör
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold" asp-area="" asp-controller="YapayZeka" asp-action="Index">
-                                <i class="bi bi-stars"></i> AI Antrenör
-                            </a>
-                        </li>
-
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item ms-lg-2">
-                                <a class="nav-link btn btn-sm btn-info text-white px-3" href="/swagger" target="_blank">
-                                    <i class="bi bi-filetype-json"></i> API Dokümanı
+                                <a class="nav-link text-warning fw-bold" href="/swagger" target="_blank">
+                                    <i class="bi bi-filetype-json me-1"></i> API / LINQ Test
                                 </a>
                             </li>
                         }
-
+                        
                     </ul>
-
                     <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main" class="flex-grow-1">
+        @RenderBody()
+    </main>
 
-    <footer class="bg-light border-top footer text-muted mt-5 py-4">
-        <div class="container text-center">
-            &copy; 2025 - Spor Salonu Yönetim Sistemi - <a asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
+    <footer class="mt-auto bg-dark text-light pt-5 pb-4" style="background: linear-gradient(135deg, #2d3436 0%, #1a1a1a 100%);">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-white fw-bold mb-3"><i class="fa-solid fa-dumbbell text-primary me-2"></i>GYM PRO</h5>
+                    <p class="small text-muted">
+                        Yapay zeka destekli spor yönetim sistemi ile hedeflerinize ulaşmak artık çok daha kolay ve bilimsel.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-secondary hover-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-secondary hover-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-secondary hover-white"><i class="fab fa-linkedin fa-lg"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-bold text-white">Hızlı Erişim</h6>
+                    <ul class="list-unstyled small mt-3">
+                        <li class="mb-2"><a href="/" class="text-muted text-decoration-none">Ana Sayfa</a></li>
+                        <li class="mb-2"><a asp-controller="Hizmets" asp-action="Index" class="text-muted text-decoration-none">Hizmetler</a></li>
+                        <li class="mb-2"><a asp-controller="Antrenors" asp-action="Index" class="text-muted text-decoration-none">Eğitmenler</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-bold text-white">Kurumsal</h6>
+                    <ul class="list-unstyled small mt-3">
+                        <li class="mb-2">
+                            <a asp-controller="Home" asp-action="About" class="text-muted text-decoration-none">Hakkımızda</a>
+                        </li>
+
+                        <li class="mb-2">
+                            <a asp-controller="Home" asp-action="Privacy" class="text-muted text-decoration-none">Gizlilik</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold text-white">İletişim</h6>
+                    <ul class="list-unstyled small text-muted mt-3">
+                        
+                        <li class="mb-2"><i class="fas fa-envelope me-2 text-primary"></i> info@gympro.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2 text-primary"></i> +90 555 123 45 67</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-top border-secondary pt-4 text-center small text-muted">
+                &copy; 2025 Spor Salonu Yönetim Sistemi. Tüm Hakları Saklıdır.
+            </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
