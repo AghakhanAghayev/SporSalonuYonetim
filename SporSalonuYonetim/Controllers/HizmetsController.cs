@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Authorization;
 namespace SporSalonuYonetim.Controllers
 {
     // KURAL 1: Sayfaları görmek için giriş yapmış olmak şart
-    [Authorize]
     public class HizmetsController : Controller
     {
         private readonly ApplicationDbContext _context;

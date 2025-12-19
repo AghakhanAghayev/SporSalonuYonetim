@@ -39,7 +39,7 @@
 
                         <div class="form-group mb-3">
                             <label asp-for="TarihSaat" class="control-label fw-bold"></label>
-                            <input asp-for="TarihSaat" class="form-control" />
+                            <input asp-for="TarihSaat" type="datetime-local" class="form-control" value="@Model.TarihSaat.ToString("yyyy-MM-ddTHH:mm")" />
                             <span asp-validation-for="TarihSaat" class="text-danger"></span>
                         </div>
 
@@ -70,4 +70,61 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        document.getElementById('AntrenorId').addEventListener('change', function() {
+            validateAppointment();
+        });
+
+        document.getElementById('HizmetId').addEventListener('change', function() {
+            validateAppointment();
+        });
+
+        document.getElementById('TarihSaat').addEventListener('change', function() {
+            validateAppointment();
+        });
+
+        function validateAppointment() {
+            var tarihSaat = document.getElementById('TarihSaat').value;
+            var antrenorId = document.getElementById('AntrenorId').value;
+            var hizmetId = document.getElementById('HizmetId').value;
+            var randevuId = document.getElementById('RandevuId').value;
+
+            if (!tarihSaat || !antrenorId || !hizmetId) return;
+
+            var data = {
+                AntrenorId: parseInt(antrenorId),
+                HizmetId: parseInt(hizmetId),
+                TarihSaat: new Date(tarihSaat)
+            };
+
+            $.ajax({
+                url: '/api/antrenor/kontrol-randevu',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                    var errorDiv = document.getElementById('appointment-errors');
+                    if (!response.valid) {
+                        if (!errorDiv) {
+                            var form = document.querySelector('form');
+                            errorDiv = document.createElement('div');
+                            errorDiv.id = 'appointment-errors';
+                            errorDiv.className = 'alert alert-danger mt-3';
+                            form.insertBefore(errorDiv, form.lastElementChild);
+                        }
+                        errorDiv.innerHTML = '<strong>Randevu düzenlenemez:</strong><ul>' + response.errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+                    } else {
+                        if (errorDiv) errorDiv.remove();
+                    }
+                },
+                error: function () {
+                    console.log('Kontrol başarısız.');
+                }
+            });
+        }
+
+        // Sayfa yüklenince mevcut değerlerle kontrol et
+        validateAppointment();
+    </script>
 }

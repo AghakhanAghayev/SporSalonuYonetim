@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SporSalonuYonetim.Controllers
 {
-    [Authorize]
     public class AntrenorsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -63,6 +62,16 @@ namespace SporSalonuYonetim.Controllers
         {
             ModelState.Remove("SporSalonu");
 
+            // Antrenör çalışma saatlerinin salon saatleri dahilinde olup olmadığını kontrol et
+            var salon = await _context.SporSalonlari.FindAsync(antrenor.SporSalonuId);
+            if (salon != null)
+            {
+                if (antrenor.CalismaBaslangic < salon.AcilisSaati || antrenor.CalismaBitis > salon.KapanisSaati)
+                {
+                    ModelState.AddModelError("CalismaBaslangic", $"Antrenör çalışma saatleri salon saatleri dahilinde olmalıdır. Salon saatleri: {salon.AcilisSaati:hh\\:mm} - {salon.KapanisSaati:hh\\:mm}");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(antrenor);
@@ -100,6 +109,16 @@ namespace SporSalonuYonetim.Controllers
             if (id != antrenor.AntrenorId) return NotFound();
 
             ModelState.Remove("SporSalonu");
+
+            // Antrenör çalışma saatlerinin salon saatleri dahilinde olup olmadığını kontrol et
+            var salon = await _context.SporSalonlari.FindAsync(antrenor.SporSalonuId);
+            if (salon != null)
+            {
+                if (antrenor.CalismaBaslangic < salon.AcilisSaati || antrenor.CalismaBitis > salon.KapanisSaati)
+                {
+                    ModelState.AddModelError("CalismaBaslangic", $"Antrenör çalışma saatleri salon saatleri dahilinde olmalıdır. Salon saatleri: {salon.AcilisSaati:hh\\:mm} - {salon.KapanisSaati:hh\\:mm}");
+                }
+            }
 
             if (ModelState.IsValid)
             {

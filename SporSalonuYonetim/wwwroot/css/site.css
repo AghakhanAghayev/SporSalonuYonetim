@@ -15,9 +15,11 @@ body {
 
 /* --- 2. NAVBAR (SOLA YASLI & DEVASA) --- */
 .navbar {
-    background: var(--primary-gradient) !important;
+    /* YENİ KOD: Tam Siyah istiyorsan #000, Footer ile uyumlu olsun dersen #111 */
+    background: #111111 !important;
     padding-top: 15px !important;
     padding-bottom: 15px !important;
+    border-bottom: 1px solid #333; /* Altına ince bir çizgi ekler, şık durur */
 }
 
     .navbar .container, .navbar .container-fluid {
@@ -256,7 +258,7 @@ footer {
 /* --- 7. HERO SECTION --- */
 .hero-section {
     position: relative;
-    background: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop') no-repeat center center/cover;
+    background: url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1470&auto=format&fit=crop') no-repeat center center/cover;
     height: 85vh;
     display: flex;
     align-items: center;
@@ -276,4 +278,19 @@ footer {
 .hero-content {
     position: relative;
     z-index: 2;
+}
+
+/* --- LOGIN FORM FIX --- */
+.form-floating > label {
+    padding: 1rem 0.75rem;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    opacity: 0.8 !important;
+    color: #495057 !important;
+    transition: opacity 0.2s ease;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    opacity: 0 !important; /* Yazarken label'ı görünmez kıl */
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
 }

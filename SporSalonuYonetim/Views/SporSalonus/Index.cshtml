@@ -52,7 +52,7 @@
 
                     <div class="card mb-3 salon-card shadow-sm">
                         <div class="card-body" onclick="@(koordinatVar ? $"haritayaGit({enlem}, {boylam})" : "alert('Bu salonun harita koordinatları girilmemiş.')")">
-                            <h5 class="card-title fw-bold text-dark">@item.Ad</h5>
+                            <h5 class="card-title fw-bold text-primary">@item.Ad</h5>
                             <p class="card-text text-muted small mb-1"><i class="bi bi-geo-alt"></i> @item.Sehir</p>
 
                             @if (!koordinatVar)

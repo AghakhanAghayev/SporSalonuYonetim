@@ -120,6 +120,11 @@
                             <div class="d-flex flex-column gap-2">
                                 <a asp-action="Details" asp-route-id="@item.RandevuId" class="btn btn-sm btn-outline-secondary">İncele</a>
 
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.RandevuId" class="btn btn-sm btn-outline-warning">Düzenle</a>
+                                }
+
                                 @if (User.IsInRole("Admin") && item.Durum == "Bekliyor")
                                 {
                                     <form asp-action="Onayla" asp-route-id="@item.RandevuId" method="post" class="d-grid">
@@ -134,6 +139,13 @@
                                 {
                                     <form asp-action="IptalEt" asp-route-id="@item.RandevuId" method="post" onsubmit="return confirm('İptal etmek istiyor musunuz?');" class="d-grid">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">İptal</button>
+                                    </form>
+                                }
+
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form asp-action="Delete" asp-route-id="@item.RandevuId" method="post" onsubmit="return confirm('Bu randevuyu silmek istiyor musunuz?');" class="d-grid">
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Sil</button>
                                     </form>
                                 }
                             </div>

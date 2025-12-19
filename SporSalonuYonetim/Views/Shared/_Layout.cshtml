@@ -11,7 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
+    <!-- Ek Bootstrap Bileşenleri -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SporSalonuYonetim.styles.css" asp-append-version="true" />
 </head>
@@ -122,9 +124,173 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
+        // AOS Animasyonları
         AOS.init({
             duration: 800,
-            once: true
+            once: true,
+            offset: 100
+        });
+
+        // Bootstrap Ek Bileşenleri
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tooltip'leri etkinleştir
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Popover'ları etkinleştir
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+
+            // Toast mesajları için
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl);
+            });
+
+            // Sayfa yüklendiğinde animasyon efekti
+            document.body.classList.add('animate__animated', 'animate__fadeIn');
+
+            // Smooth scroll için
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Özel animasyon sınıflarını ekle
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in-up');
+                    }
+                });
+            }, observerOptions);
+
+            // Tüm card elementlerini gözlemle
+            document.querySelectorAll('.card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // Hover efektleri için event listener'lar
+            document.querySelectorAll('.hover-scale').forEach(el => {
+                el.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                });
+                el.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Ripple efekti için
+            document.querySelectorAll('.ripple').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple-effect');
+
+                    this.appendChild(ripple);
+
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+
+            // Loading state yönetimi
+            window.showLoading = function(element) {
+                element.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Yükleniyor...';
+                element.disabled = true;
+            };
+
+            window.hideLoading = function(element, originalText) {
+                element.innerHTML = originalText;
+                element.disabled = false;
+            };
+
+            // Toast gösterimi için yardımcı fonksiyon
+            window.showToast = function(message, type = 'info') {
+                const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+                const toast = document.createElement('div');
+                toast.className = `toast align-items-center text-white bg-${type} border-0`;
+                toast.setAttribute('role', 'alert');
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                toastContainer.appendChild(toast);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+            };
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+                return container;
+            }
+
+            // Form validation feedback
+            document.querySelectorAll('.form-control').forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.checkValidity()) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                });
+            });
+
+            // Modal açılırken animasyon
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('show.bs.modal', function() {
+                    const modalContent = this.querySelector('.modal-content');
+                    modalContent.classList.add('animate__animated', 'animate__zoomIn');
+                });
+            });
+
+            // Scroll to top butonu
+            const scrollTopBtn = document.createElement('button');
+            scrollTopBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+            scrollTopBtn.className = 'btn btn-primary position-fixed bottom-20 end-20 d-none';
+            scrollTopBtn.style.cssText = 'bottom: 20px; right: 20px; z-index: 1000; border-radius: 50%; width: 50px; height: 50px;';
+            scrollTopBtn.onclick = () => window.scrollTo({top: 0, behavior: 'smooth'});
+            document.body.appendChild(scrollTopBtn);
+
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > 300) {
+                    scrollTopBtn.classList.remove('d-none');
+                } else {
+                    scrollTopBtn.classList.add('d-none');
+                }
+            });
         });
     </script>
 

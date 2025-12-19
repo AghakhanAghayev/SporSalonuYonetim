@@ -297,26 +297,114 @@ namespace SporSalonuYonetim.Controllers
         }
 
         // GET: Edit
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
             var randevu = await _context.Randevular.FindAsync(id);
             if (randevu == null) return NotFound();
 
-            ViewData["AntrenorId"] = new SelectList(_context.Antrenorler, "AntrenorId", "AdSoyad", randevu.AntrenorId);
+            var antrenorListesi = _context.Antrenorler
+                .Include(a => a.SporSalonu)
+                .Select(a => new
+                {
+                    a.AntrenorId,
+                    AdVeUzmanlik = a.AdSoyad + " (" + a.UzmanlikAlani + ") - " + (a.SporSalonu != null ? a.SporSalonu.Ad : "Salon Yok")
+                })
+                .ToList();
+
+            ViewData["AntrenorId"] = new SelectList(antrenorListesi, "AntrenorId", "AdVeUzmanlik", randevu.AntrenorId);
             ViewData["HizmetId"] = new SelectList(_context.Hizmetler, "HizmetId", "Ad", randevu.HizmetId);
+            ViewData["UyeId"] = new SelectList(_context.Users, "Id", "UserName", randevu.UyeId);
             return View(randevu);
         }
 
         // POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("RandevuId,TarihSaat,Durum,UyeId,AntrenorId,HizmetId")] Randevu randevu)
         {
             if (id != randevu.RandevuId) return NotFound();
+
             ModelState.Remove("Uye");
             ModelState.Remove("Antrenor");
             ModelState.Remove("Hizmet");
+
+            // --- KONTROLLER BAŞLIYOR ---
+
+            if (randevu.TarihSaat < DateTime.Now)
+            {
+                ModelState.AddModelError("TarihSaat", "Geçmiş bir tarihe randevu düzenleyemezsiniz.");
+            }
+
+            var secilenAntrenor = await _context.Antrenorler
+                .Include(a => a.SporSalonu)
+                .FirstOrDefaultAsync(a => a.AntrenorId == randevu.AntrenorId);
+
+            var secilenHizmet = await _context.Hizmetler.FindAsync(randevu.HizmetId);
+
+            if (secilenAntrenor != null && secilenHizmet != null)
+            {
+                DateTime baslangicZamani = randevu.TarihSaat;
+                DateTime bitisZamani = baslangicZamani.AddMinutes(secilenHizmet.SureDakika);
+
+                // A. SALON ÇALIŞMA SAATİ KONTROLÜ
+                if (secilenAntrenor.SporSalonu != null)
+                {
+                    TimeSpan salonAcilis = secilenAntrenor.SporSalonu.AcilisSaati;
+                    TimeSpan salonKapanis = secilenAntrenor.SporSalonu.KapanisSaati;
+
+                    TimeSpan randevuBaslangicSaat = baslangicZamani.TimeOfDay;
+                    TimeSpan randevuBitisSaat = bitisZamani.TimeOfDay;
+
+                    if (randevuBaslangicSaat < salonAcilis || randevuBitisSaat > salonKapanis)
+                    {
+                        ModelState.AddModelError("TarihSaat",
+                            $"Spor Salonu kapalı! ({secilenAntrenor.SporSalonu.Ad} Çalışma Saatleri: {salonAcilis:hh\\:mm} - {salonKapanis:hh\\:mm})");
+                    }
+                }
+
+                // B. ANTRENÖR MESAİ SAATİ KONTROLÜ
+                if (ModelState.IsValid)
+                {
+                    TimeSpan rBaslangic = baslangicZamani.TimeOfDay;
+                    TimeSpan rBitis = bitisZamani.TimeOfDay;
+
+                    if (rBaslangic < secilenAntrenor.CalismaBaslangic || rBitis > secilenAntrenor.CalismaBitis)
+                    {
+                        ModelState.AddModelError("TarihSaat",
+                            $"Antrenör bu saatlerde çalışmıyor. (Kişisel Mesai: {secilenAntrenor.CalismaBaslangic:hh\\:mm} - {secilenAntrenor.CalismaBitis:hh\\:mm})");
+                    }
+                }
+
+                // C. ÇAKIŞMA KONTROLÜ (Kendi randevusu hariç)
+                if (ModelState.IsValid)
+                {
+                    var cakismanRandevular = await _context.Randevular
+                        .Include(r => r.Hizmet)
+                        .Where(r => r.AntrenorId == randevu.AntrenorId
+                                 && r.TarihSaat.Date == randevu.TarihSaat.Date
+                                 && r.Durum != "İptal"
+                                 && r.Durum != "Reddedildi"
+                                 && r.RandevuId != randevu.RandevuId) // Kendi randevusu hariç
+                        .ToListAsync();
+
+                    foreach (var mevcutRandevu in cakismanRandevular)
+                    {
+                        DateTime mevcutBaslangic = mevcutRandevu.TarihSaat;
+                        DateTime mevcutBitis = mevcutBaslangic.AddMinutes(mevcutRandevu.Hizmet.SureDakika);
+
+                        if (baslangicZamani < mevcutBitis && bitisZamani > mevcutBaslangic)
+                        {
+                            ModelState.AddModelError("TarihSaat",
+                                $"Seçilen saatte antrenör dolu! ({mevcutBaslangic.ToShortTimeString()} - {mevcutBitis.ToShortTimeString()} arası dolu)");
+                            break;
+                        }
+                    }
+                }
+            }
+            // --- KONTROLLER BİTTİ ---
 
             if (ModelState.IsValid)
             {
@@ -332,8 +420,18 @@ namespace SporSalonuYonetim.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AntrenorId"] = new SelectList(_context.Antrenorler, "AntrenorId", "AdSoyad", randevu.AntrenorId);
+
+            var antrenorListesi = _context.Antrenorler
+                .Include(a => a.SporSalonu)
+                .Select(a => new {
+                    a.AntrenorId,
+                    AdVeUzmanlik = a.AdSoyad + " (" + a.UzmanlikAlani + ") - " + (a.SporSalonu != null ? a.SporSalonu.Ad : "Salon Atanmamış")
+                })
+                .ToList();
+
+            ViewData["AntrenorId"] = new SelectList(antrenorListesi, "AntrenorId", "AdVeUzmanlik", randevu.AntrenorId);
             ViewData["HizmetId"] = new SelectList(_context.Hizmetler, "HizmetId", "Ad", randevu.HizmetId);
+            ViewData["UyeId"] = new SelectList(_context.Users, "Id", "UserName", randevu.UyeId);
             return View(randevu);
         }
 

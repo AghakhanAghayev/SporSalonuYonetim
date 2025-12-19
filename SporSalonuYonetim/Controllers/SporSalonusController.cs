@@ -31,6 +31,7 @@ namespace SporSalonuYonetim.Controllers
             if (id == null) return NotFound();
 
             var sporSalonu = await _context.SporSalonlari
+                .Include(m => m.Antrenorler)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (sporSalonu == null) return NotFound();
 

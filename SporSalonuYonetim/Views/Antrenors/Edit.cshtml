@@ -83,4 +83,51 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        $(document).ready(function () {
+            $('#SporSalonuId').change(function () {
+                validateTrainerHours();
+            });
+
+            $('#CalismaBaslangic, #CalismaBitis').change(function () {
+                validateTrainerHours();
+            });
+
+            function validateTrainerHours() {
+                var salonId = $('#SporSalonuId').val();
+                var baslangic = $('#CalismaBaslangic').val();
+                var bitis = $('#CalismaBitis').val();
+
+                if (!salonId || !baslangic || !bitis) return;
+
+                $.ajax({
+                    url: '/api/antrenor/salon/' + salonId,
+                    type: 'GET',
+                    success: function (data) {
+                        var salonAcilis = data.acilisSaati;
+                        var salonKapanis = data.kapanisSaati;
+
+                        // Saatleri karşılaştır
+                        if (baslangic < salonAcilis || bitis > salonKapanis) {
+                            $('#CalismaBaslangic').addClass('is-invalid');
+                            $('#CalismaBitis').addClass('is-invalid');
+                            if (!$('#trainer-hours-error').length) {
+                                $('#CalismaBaslangic').after('<div id="trainer-hours-error" class="invalid-feedback">Antrenör çalışma saatleri salon saatleri dahilinde olmalıdır. Salon saatleri: ' + salonAcilis.substring(0,5) + ' - ' + salonKapanis.substring(0,5) + '</div>');
+                            }
+                        } else {
+                            $('#CalismaBaslangic').removeClass('is-invalid');
+                            $('#CalismaBitis').removeClass('is-invalid');
+                            $('#trainer-hours-error').remove();
+                        }
+                    },
+                    error: function () {
+                        console.log('Salon bilgileri alınamadı.');
+                    }
+                });
+            }
+
+            // Sayfa yüklenince mevcut değerlerle kontrol et
+            validateTrainerHours();
+        });
+    </script>
 }
