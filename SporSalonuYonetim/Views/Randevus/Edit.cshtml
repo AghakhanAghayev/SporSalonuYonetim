@@ -50,8 +50,13 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="HizmetId" class="control-label fw-bold"></label>
-                            <select asp-for="HizmetId" class="form-select" asp-items="ViewBag.HizmetId"></select>
+                            <label asp-for="HizmetId" class="control-label fw-bold">Hizmet (Sabit)</label>
+                            @* disabled ekleyerek seçimi dondurduk *@
+                            <select asp-for="HizmetId" class="form-select" asp-items="ViewBag.HizmetId" disabled></select>
+
+                            @* Verinin Controller'a gitmesi için bu gizli satırı ekledik *@
+                            <input type="hidden" asp-for="HizmetId" />
+
                             <span asp-validation-for="HizmetId" class="text-danger"></span>
                         </div>
 

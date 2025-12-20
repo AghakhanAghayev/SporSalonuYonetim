@@ -64,6 +64,6 @@ namespace SporSalonuYonetim.Models
         [Display(Name = "Resim URL")]
         // URL formatı kontrolü
         [Url(ErrorMessage = "Lütfen geçerli bir internet bağlantısı (URL) giriniz.")]
-        public string ResimUrl { get; set; }
+        public string? ResimUrl { get; set; }
     }
 }

@@ -327,6 +327,14 @@ namespace SporSalonuYonetim.Controllers
         {
             if (id != randevu.RandevuId) return NotFound();
 
+            // --- EKLEMEN GEREKEN KISIM BAŞLIYOR ---
+            // Veritabanındaki orijinal randevuyu bulup mevcut HizmetId'sini geri yüklüyoruz.
+            var mevcut = await _context.Randevular.AsNoTracking().FirstOrDefaultAsync(r => r.RandevuId == id);
+            if (mevcut != null)
+            {
+                randevu.HizmetId = mevcut.HizmetId;
+            }
+
             ModelState.Remove("Uye");
             ModelState.Remove("Antrenor");
             ModelState.Remove("Hizmet");
