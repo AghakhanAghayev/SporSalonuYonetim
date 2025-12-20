@@ -2,11 +2,6 @@
 
 ## 📋 PROJE RAPORU
 
-### 🎓 ÖĞRENCİ BİLGİLERİ
-- **Öğrenci Numarası**: [BURAYA ÖĞRENCİ NUMARANIZI YAZIN]
-- **Adı Soyadı**: [BURAYA ADINIZI SOYADINIZI YAZIN]
-- **Ders Grubu**: [BURAYA DERS GRUBUNUZU YAZIN]
-- **GitHub Bağlantısı**: [BURAYA GITHUB REPO LİNKİNİZİ YAZIN]
 
 ---
 
@@ -195,7 +190,7 @@ Bu proje, **2025-2026 Güz Dönemi Web Programlama Dersi** kapsamında geliştir
 
 1. **Projeyi Klonlayın**
 ```bash
-git clone [BURAYA GITHUB REPO LİNKİNİZİ YAZIN]
+git clone []
 cd SporSalonuYonetim
 ```
 
@@ -213,14 +208,6 @@ dotnet ef database update
 ```bash
 dotnet run
 ```
-
-5. **Admin Hesabı Oluşturun**
-- Uygulama çalıştıktan sonra `/Identity/Account/Register` sayfasından kayıt olun
-- Veritabanında rolü "Admin" olarak güncelleyin
-
-### 🔑 Varsayılan Admin Hesabı
-- **Email**: admin@sakarya.edu.tr
-- **Şifre**: sau
 
 ---
 
@@ -423,29 +410,4 @@ SporSalonuYonetim/
 
 ---
 
-## 📞 İLETİŞİM
-
-**Öğrenci**: [BURAYA ADINIZI SOYADINIZI YAZIN]
-**Email**: [BURAYA EMAIL ADRESİNİZİ YAZIN]
-**GitHub**: [BURAYA GITHUB PROFİLİNİZİ YAZIN]
-
----
-
-## 📄 EKLER
-
-### Ek-1: Sistem Mimarisi Diyagramı
-*[Buraya sistem mimarisi diyagramını ekleyin]*
-
-### Ek-2: Use Case Diyagramı
-*[Buraya use case diyagramını ekleyin]*
-
-### Ek-3: Class Diyagramı
-*[Buraya class diyagramını ekleyin]*
-
-### Ek-4: Veritabanı Şeması
-*[Buraya ER diyagramını ekleyin]*
-
----
-
 **Proje Tamamlanma Tarihi**: Aralık 2025
-**Son Güncelleme**: [BURAYA SON GÜNCELLEME TARİHİNİ YAZIN]
